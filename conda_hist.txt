@@ -1,0 +1,27 @@
+(ecomag) PS D:\EcoBaikalEn+\ecorun> history
+
+  Id CommandLine
+  -- -----------
+   1 & 'C:\Users\ecomag\miniconda3\shell\condabin\conda-hook.ps1' ; conda activate 'C:\Users\ecomag\mi...
+   2 conda create -m ecomag -c conda-forge python=3.10
+   3 conda create -n ecomag -c conda-forge python=3.10
+   4 conda activate ecomag
+   5 conda install -c conda-forge "setuptools <60"
+   6 conda install -c conda-forge geopandas xarray matplotlib
+   7 python
+   8 history
+   9 cd D:\EcoBaikalEn+\ecorun\
+  10 ls
+  11 python .\ecobaikal_longterm.py
+  12 conda install -c conda-forge dateutils
+  13 conda install -c conda-forge dateutils
+  14 python .\ecobaikal_longterm.py
+  15 history
+  16 conda install -c conda-forge earthengine-api
+  17 python
+  18 python
+  19 conda install -c conda-forge geemap
+  20 python
+  21 notebook jupyter
+  22 conda install rioxarray -c conda-forge
+  23 pip install openpyxl
