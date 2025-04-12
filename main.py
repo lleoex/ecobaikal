@@ -3,16 +3,12 @@ import time
 import datetime
 import os
 from time import strftime
-
 import pandas as pd
-
 from EE_export import getEra, getGFS
 from era2bas import eraProc
 from gfs2bas import gfsProc
-# пример функции
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+from ecobaikal_shortterm import read_params, ecocycle as ec_st
+
 
 def getQEnPlusApi(date):
     '''
@@ -46,21 +42,23 @@ def sendNoQAlert(date):
 
 # Основной скрипт запуска цепочки бесшовного прогноза.
 if __name__ == '__main__':
-    print_hi('PyCharm')
-    # today =  datetime.date.today()
-    today = datetime.date(2025, 4, 2)
+    today =  datetime.date.today()
+    # today = datetime.date(2025, 4, 2)
     print(today)
 # загрузка расходов воды по FTP от En+
 #     getQEnPlusApi(today)
 # загрузка ERA5Land до даты Х-8
-#     getEra(today)
+    getEra(today)
 # сделать bas из tifов ERA5Land
-#     eraProc()
+    eraProc()
 # загрузка GFS на даты Х-8 - Х+10
-#     getGFS(today)
+    getGFS(today)
 # сделать bas из tifов GFS
-#     gfsProc(today)
-
+    gfsProc(today)
+# запуск краткосрочного прогноза
+    os.chdir(r'd:\EcoBaikal\model')
+    params = read_params('baikal_x+10.txt')
+    ec_st([today], 10, params)
 
 
 

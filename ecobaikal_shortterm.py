@@ -106,7 +106,8 @@ def ecocycle(dates, lead, params):
         quit()
     # цикл по всем пришедшим датам
     for date in dates:
-        date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        if(type(date) == 'str'):
+            date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
         # проверка на наличие КТ для начала расчета
         fn = params['dir_CT'] + '\\' + date.strftime("%Y%m%d") + '\\INPCURV.BAS'
         # print(fn)
