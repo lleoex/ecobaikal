@@ -42,17 +42,17 @@ def sendNoQAlert(date):
 
 # Основной скрипт запуска цепочки бесшовного прогноза.
 if __name__ == '__main__':
-    today =  datetime.date.today()
-    # today = datetime.date(2025, 4, 2)
+    # today =  datetime.date.today()
+    today = datetime.date(2025, 4, 3)
     print(today)
 # загрузка расходов воды по FTP от En+
 #     getQEnPlusApi(today)
 # загрузка ERA5Land до даты Х-8
-    getEra(today)
+#     getEra(today)
 # сделать bas из tifов ERA5Land
-    eraProc()
+#     eraProc()
 # загрузка GFS на даты Х-8 - Х+10
-    getGFS(today)
+#     getGFS(today)
 # сделать bas из tifов GFS
     gfsProc(today)
 # запуск краткосрочного прогноза

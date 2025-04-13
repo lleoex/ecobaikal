@@ -91,8 +91,7 @@ def makeFcstBas(df, wd, var, date):
         # строки
         f.write('\n')
         # данные, причем в виде форматированной строки и заменяем в них запятую на пробел
-        cont = df.astype(float).round(3).to_csv(na_rep=' -99.00', lineterminator='\n',
-                                                date_format='%Y%m%d', header=False, float_format='%7.2f')
+        cont = df.astype(float).round(3).to_csv(na_rep=' -99.00', lineterminator='\n', date_format='%Y%m%d', header=False, float_format='%7.2f')
         cont = cont.replace(',', ' ')
         f.write(cont)
         f.close()
@@ -126,6 +125,7 @@ def append_dates(df):
             # присоединяем к данным
             df = pd.concat([df, cellar], ignore_index=False)
         # так как все перемешано, сортируем данные по индексу
+        df.index = pd.to_datetime(df.index)
         df = df.sort_index()
         return(df)
 
@@ -144,7 +144,7 @@ def workflow(wd, outDir, var, date):
         df.index = pd.to_datetime(df['date'])
         # для GFS0
         gfs_0 = df[df['horizon'] == 0]
-        makeBas(gfs_0.drop(['date', 'horizon'], axis=1), outDir + '/' + 'GFS_0', v)
+        makeBas(gfs_0.drop(['date', 'horizon'], axis=1), outDir + '/' + 'GFS', v)
         print('Подготовлены данные GFS для ', date)
         # для обычных прогнозов
         gfs = df[df.index.date == date]

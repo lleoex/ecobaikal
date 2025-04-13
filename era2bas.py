@@ -118,9 +118,10 @@ def genMS(df):
     with open('MeteoStation.bas', 'w') as f:
         f.write(r'Number, X_AS, Y_AS, H, Name' + '\n')
         f.write(str(len(df.index)) + '\n')
-        contents = df[['lon', 'lat', 'H', 'Name']].sort_index().reset_index().to_csv(na_rep=' -99.00', header=False,
+        contents = df[['lon', 'lat', 'H', 'Name']].sort_index().reset_index().to_csv(na_rep=' -99.00',
+                                                                                     header=False,
                                                                         float_format='%7.2f',
-                                                                        index=True, lineterminator='\n')
+                                                                        index=False, lineterminator='\n')
         f.write(contents)
         f.close()
 
@@ -165,7 +166,8 @@ def makeBas(df, wd, var):
         f.write('\n')
         # данные, причем в виде форматированной строки и заменяем в них запятую на пробел
         cont = df.astype(float).round(3).to_csv(na_rep=' -99.00', lineterminator='\n',
-                                                date_format='%Y%m%d', header=False, float_format='%7.2f')
+                                                date_format='%Y%m%d', header=False,
+                                                float_format='%7.2f')
         cont = cont.replace(',', ' ')
         f.write(cont)
         f.close()

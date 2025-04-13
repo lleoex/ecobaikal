@@ -108,23 +108,35 @@ def ecocycle(dates, lead, params):
     for date in dates:
         if(type(date) == 'str'):
             date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        # расчет по ERA5Land
+        model_end = date - timedelta(days=8)
         # проверка на наличие КТ для начала расчета
-        fn = params['dir_CT'] + '\\' + date.strftime("%Y%m%d") + '\\INPCURV.BAS'
+        fn = params['dir_CT'] + '\\' + model_end.strftime("%Y%m%d") + '\\INPCURV.BAS'
         # print(fn)
         if os.path.isfile(fn) == False:
             # расчет КТ при ее отсутствии
             print('Отсутствует контрольная точка. Выполняется расчет')
-            if not os.path.isfile(
-                    params['dir_CT'] + '\\' + datetime.date(date.year, 5, 1).strftime("%Y%m%d") + '\\INPCURV.BAS'):
-                model_start = datetime.date(2016, 1, 1)
+            if not os.path.isfile(params['dir_CT'] + '\\' +
+                                  datetime.date(model_end.year, 5, 1).strftime("%Y%m%d") +
+                                  '\\INPCURV.BAS'):
+                model_start = datetime.date(2025, 1, 1)
             else:
-                model_start = datetime.date(date.year, 5, 1)
-            model_end = date
+                model_start = datetime.date(model_end.year, 5, 1)
+
             old_meteo = params['meteo_path']
             params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
             old_dir_out = params['dir_out']
             params['dir_out'] = params['dir_CT']
-            print(model_start, model_end)
+            print('ERA5Land', model_start, model_end)
+            ecorun(model_start, model_end, **params)
+            # расчет по GFS_0
+            model_start = model_end
+            model_end = date
+            # КТ по GFS0 для начала расчета
+            model_start = date - timedelta(days=8)
+            params['meteo_path'] = old_meteo + '\\GFS\\'
+            params['dir_out'] = params['dir_CT']
+            print('GFS_0', model_start, model_end)
             ecorun(model_start, model_end, **params)
             params['dir_out'] = old_dir_out
             params['meteo_path'] = old_meteo
@@ -134,7 +146,7 @@ def ecocycle(dates, lead, params):
 
         # для метеорологических (не ансамблевых) прогнозов меняем папку с метео на нужную, сохраняя старую
         old_meteo = params['meteo_path']
-        params['meteo_path'] = params['meteo_path'] + '\\GFS\\' + date.strftime("%Y%m%d") + '\\' # ы+ 'TEMP.BAS'
+        params['meteo_path'] = params['meteo_path'] + '\\GFS\\' + date.strftime("%Y%m%d") + '\\' # + 'TEMP.BAS'
         model_start = date
         model_end = model_start + datetime.timedelta(days=lead)
         print(model_start, model_end)

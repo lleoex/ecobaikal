@@ -598,6 +598,6 @@ if __name__ == "__main__":
                  '2023-05-11', '2023-06-11', '2023-07-11', '2023-08-11', '2023-09-11', '2023-10-11']
     else:
         dates = [args.date_start]
-
+    # 12.04.2025 дописать установку только одного створа для прогноза в basin.bas
     ecocycle(dates, {args.lead_type: int(args.lead)}, ens_params)
 
