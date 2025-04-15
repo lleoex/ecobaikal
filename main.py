@@ -8,10 +8,7 @@ from EE_export import getEra, getGFS
 from era2bas import eraProc
 from gfs2bas import gfsProc
 from ecobaikal_shortterm import read_params, ecocycle as ec_st
-
-from sender import sendmail
-from receiver import receivemail
-
+import oper_tools
 
 def getQEnPlusApi(date):
     '''
@@ -21,16 +18,20 @@ def getQEnPlusApi(date):
     '''
     print('Запрашиваем данные о расходах воды за ', date)
     try:
-        df = pd.read_excel('D:/Data/Hydro/' + date.strftime(format='%Y-%m-%d') + '_расчетный_среднесуточный.xlsx',
-                           header=None, names=['date', 'post', 'lev', 'q'], skiprows=1)
+        # df = pd.read_excel('D:/Data/Hydro/' + date.strftime(format='%Y-%m-%d') + '_расчетный_среднесуточный.xlsx',
+        #                    header=None, names=['date', 'post', 'lev', 'q'], skiprows=1)
+        df = pd.read_excel('D:/Data/Hydro/buryat_q_2022.xlsx')
     except FileNotFoundError:
         sendNoQAlert(date)
         exit()
     else:
-        print("Данные о расходах за ", date, " получены")
+        if df[df['date'].dt.date == date].shape[0] > 0:
+            print("Данные о расходах за ", date, " получены")
+        else:
+            print("Файл расходов есть. В файле нет данных о расходах за ", date)
+            sendNoQAlert(date)
     finally:
         print("Процедура получения расходов за ", date, " завершена")
-
     print(df.head())
 
 
@@ -40,38 +41,36 @@ def sendNoQAlert(date):
     :param date:
     :return:
     '''
-    print('Нет данных по расходам воды за ', date)
+    print('Не получены данные о расходах воды за ', date)
 
 
 # Основной скрипт запуска цепочки бесшовного прогноза.
 if __name__ == '__main__':
     # today =  datetime.date.today()
-    today = datetime.date(2025, 4, 3)
+    today = datetime.date(2022, 4, 13)
     print(today)
-
-    attachs = [
-        'C:\\Users\\gonchukov-lv\\Downloads\\ferhri_Cyclone_tracks.csv',
-        'C:\\Users\\gonchukov-lv\\Downloads\\IMG_20250107_145124.jpg'
-    ]
-    receivemail()
-#    sendmail('test','bodytest', attachs)
 # загрузка расходов воды по FTP от En+
-#     getQEnPlusApi(today)
+    getQEnPlusApi(today)
 # загрузка ERA5Land до даты Х-8
-#     getEra(today)
+    getEra(today)
 # сделать bas из tifов ERA5Land
-#     eraProc()
+    eraProc()
 # загрузка GFS на даты Х-8 - Х+10
-#    getGFS(today)
+    getGFS(today)
 # сделать bas из tifов GFS
-#    gfsProc(today)
-# запуск краткосрочного прогноза
-#    os.chdir(r'd:\EcoBaikal\model')
-#    params = read_params('baikal_x+10.txt')
-#    ec_st([today], 10, params)
+    gfsProc(today)
+# запуск Х+0 - Х+10
+    os.chdir(r'd:\EcoBaikal\model')
+    params = read_params('baikal_x+10.txt')
+    ec_st([today], 10, params)
+# коррекция Х+10
+    date = today + datetime.timedelta(days=10)
+    pathCoeff = 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas'
+    pathFactQ = 'd:/Data/Hydro/buryat_q_2022.xlsx'
+    oper_tools.short_corr(date, pathCoeff, pathFactQ)
+# графика Х+10
 
-
-
+# рассылка Х+10
 
 
 
