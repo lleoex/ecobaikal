@@ -156,6 +156,21 @@ def ecocycle(dates, lead, params):
         ecorun(model_start, model_end, **params)
         params['meteo_path'] = old_meteo
 
+'''
+старт от 2025-04-14
+
+если экомаг сработал без коррекции (eco1)
+"d:\EcoBaikal\Archive\002\RES\20250424\QCURVBaikal                        .txt"
+
+если экомаг сработал с коррекцией (eco2)
+"d:\EcoBaikal\Archive\002\RES\20250424\pritok_2025-04-24.xlsx"
+
+       ##flag eco1
+
+        ##ecorun 2
+        ##flag eco2
+'''
+
 
 def read_params(param_path):
     with open(param_path) as f:
