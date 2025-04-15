@@ -9,6 +9,9 @@ from era2bas import eraProc
 from gfs2bas import gfsProc
 from ecobaikal_shortterm import read_params, ecocycle as ec_st
 
+from sender import sendmail
+from receiver import receivemail
+
 
 def getQEnPlusApi(date):
     '''
@@ -45,6 +48,13 @@ if __name__ == '__main__':
     # today =  datetime.date.today()
     today = datetime.date(2025, 4, 3)
     print(today)
+
+    attachs = [
+        'C:\\Users\\gonchukov-lv\\Downloads\\ferhri_Cyclone_tracks.csv',
+        'C:\\Users\\gonchukov-lv\\Downloads\\IMG_20250107_145124.jpg'
+    ]
+    receivemail()
+#    sendmail('test','bodytest', attachs)
 # загрузка расходов воды по FTP от En+
 #     getQEnPlusApi(today)
 # загрузка ERA5Land до даты Х-8
@@ -52,13 +62,15 @@ if __name__ == '__main__':
 # сделать bas из tifов ERA5Land
 #     eraProc()
 # загрузка GFS на даты Х-8 - Х+10
-#     getGFS(today)
+#    getGFS(today)
 # сделать bas из tifов GFS
-    gfsProc(today)
+#    gfsProc(today)
 # запуск краткосрочного прогноза
-    os.chdir(r'd:\EcoBaikal\model')
-    params = read_params('baikal_x+10.txt')
-    ec_st([today], 10, params)
+#    os.chdir(r'd:\EcoBaikal\model')
+#    params = read_params('baikal_x+10.txt')
+#    ec_st([today], 10, params)
+
+
 
 
 
