@@ -79,39 +79,10 @@ def receivemail():
                             body = part.get_payload(decode=True).decode()
                         except:
                             pass
-                        # #if content_type == "text/plain" and "attachment" not in content_disposition:
-                        #     # print text/plain emails and skip attachments
-                        #     #print(body)
-                        # elif "attachment" in content_disposition:
-                        #     # download attachment
-                        #     filename = part.get_filename()
-                        #     if filename.find('xlsx') > 0:
-                        #         folder_name = clean(subject)
-                        #         if not os.path.isdir(folder_name):
-                        #             # make a folder for this email (named after the subject)
-                        #             os.mkdir(folder_name)
-                        #         filepath = os.path.join(folder_name, filename)
-                        #         # download attachment and save it
-                        #         open(filepath, "wb").write(part.get_payload(decode=True))
-                else:
-                    # extract content type of email
-                    content_type = msg.get_content_type()
-                    # get the email body
-                    body = msg.get_payload(decode=True).decode()
-                    #if content_type == "text/plain":
-                        # print only text email parts
-                        #print(body)
-                if content_type == "text/html":
-                    # if it's HTML, create a new HTML file and open it in browser
-                    folder_name = clean(subject)
-                    if not os.path.isdir(folder_name):
-                        # make a folder for this email (named after the subject)
-                        os.mkdir(folder_name)
-                    filename = "index.html"
-                    filepath = os.path.join(folder_name, filename)
-                    # write the file
-                    open(filepath, "w").write(body)
-                    # open in the default browser
+
+
+
+
 
                 print("=" * 100)
     # close the connection and logout
