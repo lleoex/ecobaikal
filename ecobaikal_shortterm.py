@@ -10,7 +10,7 @@ from dateutils import relativedelta
 import argparse
 # import logging
 # from logging.handlers import RotatingFileHandler
-# from oper_tools import check_meteo
+from oper_tools import check_meteo, short_corr, graphShort
 
 def ecorun(date_start, date_end, meteo_path, hydro_path, baspath, exepath, exename, ens_flag, dir_CT, dir_out,
            source_name, year_start, year_end):
@@ -119,9 +119,9 @@ def ecocycle(dates, lead, params):
             if not os.path.isfile(params['dir_CT'] + '\\' +
                                   datetime.date(model_end.year, 5, 1).strftime("%Y%m%d") +
                                   '\\INPCURV.BAS'):
-                model_start = datetime.date(2025, 1, 1)
+                model_start = datetime.date(model_end.year, 1, 1)
             else:
-                model_start = datetime.date(model_end.year, 5, 1)
+                model_start = datetime.date(2022, 5, 1)
 
             old_meteo = params['meteo_path']
             params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
@@ -150,26 +150,30 @@ def ecocycle(dates, lead, params):
         model_start = date
         model_end = model_start + datetime.timedelta(days=lead)
         print(model_start, model_end)
-        # ecoens(model_start, model_end, **params)
-
-        # для метеорологических (не ансамблевых) прогнозов
+        # первый расчет прогноза без коррекции
         ecorun(model_start, model_end, **params)
+        # коррекция и запись sbrosXX.bas
+
+        short_corr(date=date, res=params['dir_out'] + '/' + model_end.strftime("%Y%m%d") + '/' + params['source_name'],
+                   pathCoeff='d:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas',
+                   pathFactQ='d:/Data/Hydro/buryat_q_2022.xlsx')
+        # запуск прогноза с заливкой sbrosXX.bas
+        # меняем значения в sbros.bas в зависимости от варианта расчета: "0" если прогноз створам, "4" если в Байкал
+        with open(params['baspath'] + '\sbros.bas', 'w') as sbros:
+            sbros.truncate()
+            sbros.write(' 4 \n 1 2 3 4')
+            sbros.close()
+
+        # второй расчет прогноза с коррекцией
+        ecorun(model_start, model_end, **params)
+        # выключаем сбросы в sbros.bas
+        with open(params['baspath'] + '\sbros.bas', 'w') as sbros:
+            sbros.truncate()
+            sbros.write(' 0 \n 1 2 3 4')
+            sbros.close()
         params['meteo_path'] = old_meteo
 
-'''
-старт от 2025-04-14
-
-если экомаг сработал без коррекции (eco1)
-"d:\EcoBaikal\Archive\002\RES\20250424\QCURVBaikal                        .txt"
-
-если экомаг сработал с коррекцией (eco2)
-"d:\EcoBaikal\Archive\002\RES\20250424\pritok_2025-04-24.xlsx"
-
-       ##flag eco1
-
-        ##ecorun 2
-        ##flag eco2
-'''
+        graphShort(params['dir_out'] + '/' + model_end.strftime("%Y%m%d") + '/' + params['source_name'])
 
 
 def read_params(param_path):

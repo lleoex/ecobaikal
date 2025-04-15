@@ -143,7 +143,7 @@ def workflow(wd, outDir, var, date):
         df = tifProc(wd + v)
         df.index = pd.to_datetime(df['date'])
         # для GFS0
-        gfs_0 = df[df['horizon'] == 0]
+        gfs_0 = df[(df['horizon'] == 0) & (df.index.year == date.year)]
         makeBas(gfs_0.drop(['date', 'horizon'], axis=1), outDir + '/' + 'GFS', v)
         print('Подготовлены данные GFS для ', date)
         # для обычных прогнозов
@@ -166,7 +166,7 @@ def gfsProc(today):
 
 
 if __name__ == "__main__":
-    gfsProc(date.today())
+    gfsProc(date(2022, 4, 13))
     # однократная генерация MeteoStation.bas из tif GFS
     # MSFromTif(r'd:\EcoMeteo\GFS\baikal\t2m_above_ground\2016-10-31+9.tif')
 

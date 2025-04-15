@@ -1,9 +1,11 @@
 # encode: UTF-8
 import matplotlib.pyplot as plt
 # from matplotlib import figure
+import numpy
 import pandas as pd
 import numpy as np
 import datetime
+import csv
 from datetime import date, timedelta
 import time
 from calendar import monthrange, isleap
@@ -15,7 +17,8 @@ import matplotlib.dates as mdates
 import os
 import sys
 # import psycopg2
-# import xlrd
+# import
+from era2bas import append_dates
 plt.style.use('ggplot')
 font = {'family': 'verdana',
         'weight': 'bold',
@@ -156,34 +159,39 @@ def graph_fcst(pathCT, pathENS, date_start, date_end, skrows, rrows):
 
 def check_meteo(path, date_start):
     # префиксы файлов
-    met_vars = ['TEMP', 'PRE', 'DEF']
-    # если дата пришла как строка, преобразуем в дату
-    if isinstance(date_start, str):
-        date_start = datetime.datetime.strptime(date_start, '%d.%m.%Y')
+    met_vars = ['TEMP', 'PRE']
+    flag = []
     # цикл по переменным
-    for v in met_vars:
+    for i, v in enumerate(met_vars):
+        # print(i, v)
         # путь до файла с текущим годом
-        met_file =  path + '\\' + v + str(date_start.year)[2:4] + '.bas'
+        met_file =  path + '/' + v + str(date_start.year)[2:4] + '.bas'
         # читаем из файла список станций
         with open(met_file) as f:
             # print(f.name)
             f.readline()
             f.readline()
-            ind = f.readline().rstrip().split(sep=" ")
+            ind = f.readline().rstrip().split(sep=",")
             f.close()
         ind.insert(0, 'date')
         # ind.pop(-1)
         # print(ind)
         df = pd.read_csv(met_file, header=None, skiprows=6, delimiter=r"\s+", names=ind, parse_dates=['date'],
-                         dayfirst=True, index_col='date', na_values=-99.0)
+                         dayfirst=False, index_col='date', na_values=-99.0)
 
-        # print(df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values == len(ind) - 1)
         nulldata = df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values == len(ind) - 1
         non_nulldata = len(ind) - 1 - df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values
         if nulldata:
             print('Отсутствуют данные по ' + v + ' за дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
+            flag.append(False)
         else:
             print('Данные по ' + v + ' есть за дату выпуска прогноза с ' + str(non_nulldata).strip("[]") + ' станций.')
+            flag.append(True)
+    if numpy.mean(flag) == 1:
+        return True
+    else:
+        return False
+
 
 def check_hydro(path, date_start):
     """
@@ -217,22 +225,150 @@ def check_hydro(path, date_start):
         # app_log.error(
         #     'Данные по расходам воды есть на дату выпуска прогноза ' + date_start.strftime('%d.%m.%Y') + '.')
 
+
+def readShort(path, **kwargs):
+    # path = 'd:/EcoBaikal/Archive/002/RES/20250424/QCURVBaikal                        .txt',
+    df = pd.read_csv(path,
+                     sep='\s+', names=['date', 'angara', 'barguzin', 'selenga', 'baikal'],
+                     usecols=[0, 2, 3, 4, 5], skiprows=1,
+                     parse_dates=['date'], date_format='%Y%m%d')
+    df.insert(0, 'lag', range(0, len(df)))
+
+    if kwargs.get('coef') == True:
+        df = pd.melt(df, id_vars=['lag', 'date']).reset_index()
+        coef = pd.read_csv('d:\EcoBaikal\Basin\Baik\Bas\X10_corr.bas', sep=';')
+        df = pd.merge(df, coef, 'left', left_on=['variable', 'lag'], right_on=['river', 'lag'])
+    return df
+
+def readCoef(path):
+    df = pd.read_csv(path, sep=';')
+    return df
+
+def short_corr(date, res, pathCoeff, pathFactQ):
+    '''
+    Коррекция расчетных значений прогнозов по притокам и создание файлов sbrosXX.bas для Байкала
+    :param date:
+    :param pathCoeff:
+    :param pathFactQ:
+    :return:
+    '''
+    prog = readShort(res, coef=True)
+    # print(prog.head())
+    coef = readCoef(pathCoeff)
+    # print(coef.head())
+    df = pd.read_excel(pathFactQ)
+    dateMin = prog.date.min()
+    df_corr = pd.merge(prog, df.loc[df['date'] == dateMin], 'left',
+                       left_on=['date', 'river'],
+                       right_on=['date', 'post'])
+    df_corr.loc[:, 'q'] = df_corr.loc[:, 'q'].ffill()
+    df_corr['qcorr'] = df_corr['value'] + abs(df_corr['value'] - df_corr['q']) * df_corr['b']
+    df_corr['date'] = df_corr['date'].dt.date
+    df_corr = df_corr.loc[df_corr['river'] != 'baikal', ["date", "river", "qcorr"]]
+    df_corr['date'] = pd.to_datetime(df_corr['date'], format='%Y%m%d')
+    df_corr = df_corr.pivot(index='date', columns='river', values='qcorr')
+    df_corr.rename({'river': 'riv', 'qcorr': 'q'}, axis=1, inplace=True)
+    # берем фактические расходы по створам до даты начала прогноза, соединяем с прогнозами, пишем в sbros.bas
+    df_fact = pd.DataFrame()
+    riv = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
+    for r, name in riv.items():
+        path = 'D:/EcoBaikal/Data/Hydro/Baikal/' + r + '/hydr' + str(date.year)[2:4] + '.bas'
+        df = pd.read_csv(path, sep='\t', skiprows=3, names=['n', 'date', 'q'], usecols=[1, 2])
+        df['riv'] = name
+        df_fact = pd.concat([df_fact, df], axis=0)
+        # print(df_fact.head())
+    df_fact['date'] = pd.to_datetime(df_fact['date'], format='%Y%m%d')
+    df_fact = df_fact.pivot(index='date', columns='riv', values='q')
+    df_fact = df_fact[:date]
+    df_fact = pd.concat([df_fact, df_corr], axis=0, ignore_index=False)
+    df_fact = append_dates(df_fact)
+    for column in df_fact:
+        # print(column)
+        path = 'D:/EcoBaikal/Data/Hydro/Baikal/' + str([k for k, v in riv.items() if v == column][0])
+        # print(path)
+        writeHydr(df_fact[column], path, sbros=True, name=column)
+    # print(df_fact.head())
+
+
+def makeHydr(path):
+    '''
+    Преобразование файла от Бурятского ЦГМС / Эн+ в hydrXX.bas
+    :param path:
+    :return:
+    '''
+    df = pd.read_excel(path)
+    year = df['date'].dt.date.min().year
+    riv = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
+    for r, name in riv.items():
+        outfile = 'D:/EcoBaikal/Data/Hydro/Baikal/' + r + '/hydr' + str(year)[2:4] + '.bas'
+        out = df.loc[df['post'] == name].reset_index().\
+            drop(['index', 'lev', 'post'], axis=1)
+        writeHydr(out, 'D:/EcoBaikal/Data/Hydro/Baikal/' + r + '/', name=name, sbros=True)
+        # out.index += 1
+        # out.to_csv(outfile, date_format = '%Y%m%d', sep='\t', na_rep='-99.0',
+        #            quoting=csv.QUOTE_NONE, escapechar=' ',
+        #            header=['Basin	' + name + '	Year	' + str(year) +
+        #                    ' \n 	1	0	21100 \n N	DATE	Qm3/s', '.'])
+        print(name, outfile)
+
+
+def writeHydr(df, path, **kwargs):
+    if 'date' in df:
+        year = df['date'].dt.date.min().year
+    else:
+        year = df.index.min().year
+    if kwargs.get('sbros') == True:
+        outFile = path + '/sbros' + str(year)[2:4] + '.bas'
+    else:
+        outFile = path + '/hydr' + str(year)[2:4] + '.bas'
+    if kwargs.get('name'):
+        header = ['Basin	' + kwargs.get('name')[0] + '	Year	' + str(year) +
+         ' \n 	1	0	21100 \n N	DATE	Qm3/s', '.']
+    else:
+        header = ['Basin	Generic	Year	' + str(year) +
+         ' \n 	1	0	21100 \n N	DATE	Qm3/s', '.']
+    if isinstance(df.index, pd.DatetimeIndex):
+        # df['date'] = df.index
+        df = df.reset_index()
+        df.index += 1
+    else:
+        df.index += 1
+    df.to_csv(outFile, date_format='%Y%m%d', sep='\t', na_rep='-99.0',
+               quoting=csv.QUOTE_NONE, escapechar=' ',
+               header=header, float_format='%.2f')
+
+
+def classify_post(post):
+    match post:
+        case _ if post == 'Селенга Улан-Удэ':
+            return 'ulanude'
+        case _ if post == 'Селенга Мостовой':
+            return 'selenga'
+        case _ if post == 'Баргузин':
+            return 'barguzin'
+        case _ if post == 'Верхняя Заимка':
+            return 'angara'
+        case _:
+            return 'Unknown'
+
+
+def readQFact(path):
+    df = pd.read_excel(path, skiprows=0, names=['date', 'post', 'lev', 'q'])
+    df['post'] = df['post'].apply(classify_post)
+    return df
+
+
+def graphShort(res):
+    prog = readShort(res)
+    prog.drop('lag', axis=1).plot.line(x='date', subplots=[('angara', 'barguzin'), ('selenga', 'baikal')])
+    plt.show()
+
+
 # главный модуль
 if __name__ == "__main__":
-    # менять: папку, дату первую, кол-во строк для чтения
-    # graph_fcst(r'd:\ICEX2016\decadal\init\19910401\QCURVCheboksarskoe                 .txt',
-    #            r'd:\ICEX2016\decadal\result\19910701\19910701_ens.txt',
-    #            datetime.date(1991, 2, 1), datetime.date(1991, 7, 1), 0, 92)
-    # graph_fcst(r'd:\EcoPrognoz\Archive\005\20170418\QCURVCheboksarskoe                 .txt',
-    #            r'd:\EcoPrognoz\Archive\005\20170701\QCURVCheboksarskoe                 .txt',
-    #            datetime.date(2017, 4, 18), datetime.date(2017, 7, 1), 0, 73)
-    # check_meteo('d:\RESERVOIR_NEW\COMMON\METEO\CheboBase', datetime.datetime.today())
-    # check_meteo('d:\RESERVOIR_NEW\COMMON\METEO\CheboBase', '18.06.2018')
-    # check_meteo('d:\RESERVOIR_NEW\COMMON\METEO\CheboBase', datetime.date(2018, 5, 31))
-    # check_meteo('d:\RESERVOIR_NEW\COMMON\METEO\CheboBase', datetime.date(2018, 5, 30))
-    # check_meteo('d:\RESERVOIR_NEW\COMMON\METEO\CheboBase', '30.05.2018')
-    # check_meteo('d:\RESERVOIR_NEW\COMMON\METEO\CheboBase', '31.05.2018')
-    # check_meteo('d:\RESERVOIR_NEW\COMMON\METEO\CheboBase', datetime.datetime.today())
-    graph_fcst(r'c:\Users\morey\PycharmProjects\run_ecomag\008\19790701\QCURVKabansk                       .txt',
-               r'c:\Users\morey\PycharmProjects\run_ecomag\023\19791001\19791001_ens.txt',
-               datetime.date(1979, 7, 1), datetime.date(1979, 10, 1), 0, 91)
+    date = datetime.date(2022, 4, 14) + datetime.timedelta(days=10)
+    pathCoeff = 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas'
+    pathFactQ = 'd:/Data/Hydro/buryat_q_2022.xlsx'
+    # makeHydr('d:/Data/Hydro/buryat_q_2022.xlsx')
+    # short_corr(date, 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas', pathCoeff, pathFactQ)
+    # readQFact('d:/YandexDisk/ИВПРАН/En+/отчет2025_2/1_шаблон_расчетный_среднесуточный.xlsx')

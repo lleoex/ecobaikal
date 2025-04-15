@@ -27,7 +27,7 @@ def tif2df(wd, x, var):
     # делаем gdf
     df = gp.GeoDataFrame(df, geometry=gp.points_from_xy(df['x'], df['y']), crs='EPSG:4326')
     # буфер водосбора для обрезки точек (с ~20000 до 9000)
-    poly = gp.read_file(r'D:/Data/ERA5Land/shp/baikal_basin_buff10km.shp')
+    poly = gp.read_file(r'D:/Data/ERA5Land/shp/baikal_basin_buff10km.shp').to_crs(crs=4326)
     # пересечение по пространству
     df = gp.sjoin(df, poly)
     # вытаскиваем каждую третью точку (для оптимизации размера), только значения без координат
@@ -45,7 +45,7 @@ def tif2df(wd, x, var):
 
 
 def append_dates(df):
-    # print(df.head())
+    print(df.head())
     # проверяем, за один ли год у нас данные
     if df.index.min().year == df.index.max().year:
         # если данные за один год, то проверяем, начинаются ли они с 1 января
@@ -68,7 +68,7 @@ def append_dates(df):
             cellar = cellar.set_index(['date'])
             # присоединяем к данным
             df = pd.concat([df, cellar], ignore_index=False)
-        # так как все перемешано, сортируем данные по индексу
+    # так как все перемешано, сортируем данные по индексу
         df = df.sort_index()
         return(df)
 
@@ -181,11 +181,12 @@ def workflow(fromDir, toDir, var):
     :param var:
     :return:
     '''
+    # добавить разбивку по годам исходных файлов
     for i in var:
         os.chdir(fromDir)
         os.chdir(fromDir + '/' + i)
         print(os.getcwd())
-        pattern = str(os.getcwd() + '/' + '2025*.tif') # если нужен только один год то поставить 'ХХХХ*.tif'
+        pattern = str(os.getcwd() + '/' + '2022*.tif') # если нужен только один год то поставить 'ХХХХ*.tif' - изменить
         ListFiles = glob.glob(pattern, recursive=True)  # Список файлов tif на каждую дату
         print(ListFiles)
         all_df = pd.DataFrame()  # пустой список для записи фреймов за каждую дату

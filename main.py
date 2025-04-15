@@ -49,26 +49,31 @@ if __name__ == '__main__':
     # today =  datetime.date.today()
     today = datetime.date(2022, 4, 13)
     print(today)
-# загрузка расходов воды по FTP от En+
-    getQEnPlusApi(today)
-# загрузка ERA5Land до даты Х-8
-    getEra(today)
-# сделать bas из tifов ERA5Land
-    eraProc()
-# загрузка GFS на даты Х-8 - Х+10
-    getGFS(today)
-# сделать bas из tifов GFS
-    gfsProc(today)
+    # загрузка расходов воды по FTP от En+
+    #     getQEnPlusApi(today)
+    # загрузка ERA5Land до даты Х-8
+    if oper_tools.check_meteo('D:/EcoBaikal/Data/Meteo/Eraland', today - datetime.timedelta(days=8)) == False:
+        getEra(today)
+        # сделать bas из tifов ERA5Land
+        eraProc()
+    else:
+        print('Данные по реанализу на дату выпуска прогноза уже есть в архиве.')
+    # загрузка GFS на даты Х-8 - Х+10
+    if oper_tools.check_meteo('D:/EcoBaikal/Data/Meteo/GFS/' + today.strftime(format='%Y%m%d'), today) == False:
+        getGFS(today)
+        # сделать bas из tifов GFS
+        gfsProc(today)
+    else:
+        print('Данные по метеопрогнозам на дату выпуска прогноза уже есть в архиве.')
+
+
 # запуск Х+0 - Х+10
     os.chdir(r'd:\EcoBaikal\model')
     params = read_params('baikal_x+10.txt')
     ec_st([today], 10, params)
-# коррекция Х+10
-    date = today + datetime.timedelta(days=10)
-    pathCoeff = 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas'
-    pathFactQ = 'd:/Data/Hydro/buryat_q_2022.xlsx'
-    oper_tools.short_corr(date, pathCoeff, pathFactQ)
 # графика Х+10
+
+
 
 # рассылка Х+10
 

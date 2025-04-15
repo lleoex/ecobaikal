@@ -4,14 +4,14 @@ import geemap
 import ee
 from datetime import timedelta
 import pandas as pd
-
+from oper_tools import check_meteo
 #  авторизация в GEE
-#ee.Authenticate()
+ee.Authenticate()
 
-service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
-credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
-ee.Initialize(credentials)#,project = 'iwp-sac-baikal')
-#ee.Initialize(project = 'iwp-dev-383806')
+# service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
+# credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
+# ee.Initialize(credentials)#,project = 'iwp-sac-baikal')
+ee.Initialize(project = 'iwp-dev-383806')
 
 
 def setGeom():
@@ -35,9 +35,9 @@ def setGeom():
 
 def getEra(date):
     # границы по времени
-    # dateStart = '2024-01-01' # если нужно с какой-то определенной даты загрузить
-    dateStart = str(date - timedelta(days=18)) # если нужно загрузить за последние 10 дней
-    dateEnd = str(date - timedelta(days=7))
+    dateStart = '2022-01-01' # если нужно с какой-то определенной даты загрузить
+    # dateStart = date - timedelta(days=18) # если нужно загрузить за последние 10 дней
+    dateEnd = date - timedelta(days=8)
     print('Запрашиваем данные ERA5Land за ', dateStart, dateEnd)
     # границы по пространству
     geom = setGeom()
