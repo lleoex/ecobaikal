@@ -1,6 +1,11 @@
+$yy = Get-Date -UFormat "%Y"
+#$yy = Get-Date -UFormat "%H%M"
+$mm = Get-Date -UFormat "%m"
+$dd = Get-Date -UFormat "%d"
 
-& c:\windows\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy ByPass -NoExit -Command "& 'C:\Users\SAC\miniconda3\shell\condabin\conda-hook.ps1' ; conda activate 'C:\Users\SAC\miniconda3' "
+echo $yy-$mm-$dd
 
+$py_dir = "C:\Users\gonchukov-lv\Documents\GitHub\ecobaikal"
 & conda activate ecomag
+& python $py_dir\run_download.py --date_today=$yy-$mm-$dd --source=Q
 
-& conda info
