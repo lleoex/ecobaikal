@@ -1,13 +1,19 @@
 import os
 class Settings:
     def __init__(self):
-        self.ROOT_DIR = "C:/usr/data/project/en"
+        self.ROOT_DIR = "D:/"
         self.ERA_TIFF_DIR = os.path.join(self.ROOT_DIR,"Data/ERA5Land/")
         self.ERA_BAS_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal/Data/Meteo/Eraland/")
         self.GFS_TIFF_DIR = os.path.join(self.ROOT_DIR,"Data/GFS/")
         self.GFS_BAS_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal/Data/Meteo/")
         self.EMG_HYDRO_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal/Data/Hydro/Baikal/")
         self.EMAIL_XLS_DIR = os.path.join(self.ROOT_DIR,"Data/")
+        self.SHORT_CT = os.path.join(self.ROOT_DIR,"EcoBaikal/Archive/002/CT")
+        self.SHORT_RES = os.path.join(self.ROOT_DIR, "EcoBaikal/Archive/002/RES")
+        self.LONG_CT = os.path.join(self.ROOT_DIR, "EcoBaikal/Archive/003/CT")
+        self.LONG_RES = os.path.join(self.ROOT_DIR, "EcoBaikal/Archive/003/RES")
+        self.MODEL_DIR = os.path.join(self.ROOT_DIR, "EcoBaikal/model")
+        self.SOURCE_NAME = os.path.join(self.ROOT_DIR, "QCURVBaikal                        .txt")
         self.rivers = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
         if not os.path.isdir(self.ROOT_DIR):
             self.mkdirs()

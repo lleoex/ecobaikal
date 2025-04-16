@@ -119,7 +119,7 @@ def ecocycle(dates, lead, params):
             if not os.path.isfile(params['dir_CT'] + '\\' +
                                   datetime.date(model_end.year, 5, 1).strftime("%Y%m%d") +
                                   '\\INPCURV.BAS'):
-                model_start = datetime.date(2016, 1, 1)
+                model_start = datetime.date(2022, 1, 1)
             else:
                 model_start = datetime.date(model_end.year, 1, 1)
 
@@ -171,7 +171,7 @@ def ecocycle(dates, lead, params):
             sbros.close()
         params['meteo_path'] = old_meteo
 
-        graphShort(params['dir_out'] + '/' + model_end.strftime("%Y%m%d") + '/' + params['source_name'])
+        # graphShort(params['dir_out'] + '/' + model_end.strftime("%Y%m%d") + '/' + params['source_name'])
 
 
 def read_params(param_path):

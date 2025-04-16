@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
-import os.path
-
 import geemap
 import ee
-from datetime import timedelta
+from datetime import date, timedelta
 import pandas as pd
 from settings import Settings
 from oper_tools import check_meteo
@@ -12,6 +10,10 @@ from oper_tools import check_meteo
 #ee.Authenticate()
 #ee.Initialize(project = 'iwp-dev-383806')
 
+# service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
+# credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
+# ee.Initialize(credentials)#,project = 'iwp-sac-baikal')
+ee.Initialize(project = 'iwp-dev-383806')
 
 service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
 credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
@@ -40,7 +42,7 @@ def setGeom():
 
 def getEra(date):
     # границы по времени
-    #dateStart = '2022-01-01' # если нужно с какой-то определенной даты загрузить
+    # dateStart = '2024-01-01' # если нужно с какой-то определенной даты загрузить
     dateStart = date - timedelta(days=18) # если нужно загрузить за последние 10 дней
     dateEnd = date - timedelta(days=8)
     print('Запрашиваем данные ERA5Land за ', dateStart, dateEnd)
@@ -98,3 +100,7 @@ def getGFS(date):
             gfs = ee.ImageCollection(collection).select(bandPrec).filterDate(str(d)[0:10]).filterBounds(geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).sum()
             # в случае с осадками суммируем
             geemap.ee_export_image(gfs, path + '/' + str(d)[0:10] + '+' + str(i) + '.tif', region = geom)
+
+
+if __name__ == "__main__":
+    getEra('2024-12-31')

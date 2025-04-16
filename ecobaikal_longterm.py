@@ -6,7 +6,7 @@ import os
 import subprocess
 import pandas as pd
 from datetime import timedelta
-from dateutils import relativedelta
+from dateutil import relativedelta
 import numpy as np
 import argparse
 import logging
@@ -59,6 +59,12 @@ def ecoens(date_start, date_end, year_ens_start, year_ens_end, meteo_path, hydro
             kpt.write('0 1 1')
         kpt.close()
 
+    # меняем значения в kpoint.bas в зависимости от варианта расчета: "0" если ансамбль, "2" если диагноз
+    with open(baspath + '/basin.bas', 'w') as bas:
+        bas.truncate()
+        bas.write('1 \n 4 3 2 1')
+        bas.close()
+
     # читаем из pathen.bas старые настройки и меняем их по очереди
     with open(exepath + '\pathen.bas', 'r+') as pathen:
         lines = pathen.read().splitlines()
@@ -99,7 +105,7 @@ def ecoens(date_start, date_end, year_ens_start, year_ens_end, meteo_path, hydro
             _, err = result.communicate()
             if err:
                 print(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + err.decode("utf-8"))
-                app_log.error(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + err.decode("utf-8"))
+                # app_log.error(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + err.decode("utf-8"))
 
             print(result)
 
@@ -314,7 +320,7 @@ def ecorun(date_start, date_end, meteo_path, hydro_path, baspath, exepath, exena
         _, err = result.communicate()
         if err:
             print(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + err.decode("utf-8"))
-            app_log.error(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + err.decode("utf-8"))
+            # app_log.error(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + err.decode("utf-8"))
 
         print(result)
 
@@ -332,8 +338,8 @@ def ecocycle(dates, lead, params):
         quit()
     # цикл по всем пришедшим датам
     for date in dates:
-
-        date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        if (type(date) == 'str'):
+            date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
         # check_meteo(params['meteo_path'], date)
         # проверка на наличие КТ для начала расчета
         # проверка на наличие КТ для начала расчета
@@ -347,8 +353,8 @@ def ecocycle(dates, lead, params):
                 kpt.truncate()
                 kpt.write('2 0 1')
                 kpt.close()
-            app_log.error(datetime.datetime.now().strftime(
-                "%d.%m.%Y %H:%M:%S") + ' Отсутствует контрольная точка. Выполняется расчет')
+            # app_log.error(datetime.datetime.now().strftime(
+            #     "%d.%m.%Y %H:%M:%S") + ' Отсутствует контрольная точка. Выполняется расчет')
             if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year, 5, 1).strftime("%Y%m%d") + '\\' + params['source_name']):
                 if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year - 1, date.month, 1).strftime("%Y%m%d") + '\\' + params['source_name']):
                     model_start = datetime.date(1982, 1, 1)
@@ -360,8 +366,8 @@ def ecocycle(dates, lead, params):
             old_dir_out = params['dir_out']
             params['dir_out'] = params['dir_CT']
             print(model_start, model_end)
-            app_log.error(
-                'Расчет контрольной точки ' + model_start.strftime("%d.%m.%Y") + " - " + model_end.strftime("%d.%m.%Y"))
+            # app_log.error(
+            #     'Расчет контрольной точки ' + model_start.strftime("%d.%m.%Y") + " - " + model_end.strftime("%d.%m.%Y"))
             ecorun(model_start, model_end, **params)
             params['dir_out'] = old_dir_out
         # сам расчет
@@ -378,14 +384,15 @@ def ecocycle(dates, lead, params):
         # конец прогноза - конец месяца, следующего за месяцем старта прогноза
         # model_end = model_start + relativedelta(**lead) # так было
         # if model_start.month < 10:
-        model_end = datetime.date(model_start.year, model_start.month + lead.get('months'), 1)
+        # model_end = datetime.date(model_start.year, model_start.month + lead.get('months'), 1)
+        model_end = datetime.date(date.year, date.month + lead + 1, 1)
         # else:
         #     model_end = datetime.date(model_start.year + 1, abs(model_start.month + lead.get('months') - 12), 1)
 
 
         print(model_start, model_end)
-        app_log.error(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + ' Старт прогноза' + ", начало: " +
-                      model_start.strftime("%d.%m.%Y") + ", окончание: " + model_end.strftime("%d.%m.%Y"))
+        # app_log.error(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + ' Старт прогноза' + ", начало: " +
+        #               model_start.strftime("%d.%m.%Y") + ", окончание: " + model_end.strftime("%d.%m.%Y"))
         ecoens(model_start, model_end, **params)
 
 
@@ -438,7 +445,7 @@ def ens_stat(path):
     df.index = pd.to_datetime(df.index)
     del df['date']
     df.drop(df.tail(1).index, inplace=True)
-    dfw = df * 86400 / 1000000000
+    dfw = df * 86400 // 1000000000
 
 
 
@@ -580,11 +587,11 @@ if __name__ == "__main__":
 
     ens_params = read_params(args.params)
 
-    app_log = logging.getLogger('root')
-    log_handler = RotatingFileHandler(filename=args.log, mode='a', maxBytes=100*1024,
-                                      backupCount=2, encoding=None, delay=0)
-    app_log.setLevel(logging.ERROR)
-    app_log.addHandler(log_handler)
+    # app_log = logging.getLogger('root')
+    # log_handler = RotatingFileHandler(filename=args.log, mode='a', maxBytes=100*1024,
+    #                                   backupCount=2, encoding=None, delay=0)
+    # app_log.setLevel(logging.ERROR)
+    # app_log.addHandler(log_handler)
 
     if args.single == False:
         # dates = datelist(args.date_start, args.date_end, args.freq_type, args.freq)
