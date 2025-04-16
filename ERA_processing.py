@@ -6,6 +6,7 @@ import pandas as pd
 import os
 import datetime as dt
 import matplotlib.pyplot as plt
+import xarray
 
 # Папки с ежедневными tif-файлами
 # path_dew = 'G:/Python_Pechora/20032013_test/dew'

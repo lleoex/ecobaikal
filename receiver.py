@@ -4,14 +4,15 @@ from email.header import decode_header
 import os
 from datetime import datetime
 import base64
+import settings
 
 
-def clean(text):
+def clean(text)->str:
     # clean text for creating a folder
     return "".join(c if c.isalnum() else "_" for c in text)
 
 
-def receivemail():
+def receivemail() -> (datetime, str):
     # account credentials
     login = 'ecomag.baikal@iwp.ru'
     passwd = 'uhwifsunnyqtseqk'
@@ -27,7 +28,10 @@ def receivemail():
     status, messages = imap.select("INBOX")
 
     messages = int(messages[0])
-    N = messages
+    N = 10
+
+    maxDt = datetime(2020,1,1)
+    lastFile=''
 
     for i in range(messages, messages - N, -1):
     #for i in range(1, 4, 1):
@@ -73,7 +77,12 @@ def receivemail():
                                         dt = datetime.strptime(dt_b64,'%a, %d %b %Y %H:%M:%S GMT')
                                         print(dt_b64)
                                 if filename:
-                                    open(f'{dt.strftime("%Y%m%d_%H%M")}_{filename}', "wb").write(part.get_payload(decode=True))
+                                    sets = settings.Settings()
+                                    path = os.path.join(sets.EMAIL_XLS_DIR,f'{dt.strftime("%Y%m%d_%H%M")}_{filename}')
+                                    open(path, "wb").write(part.get_payload(decode=True))
+                                    if dt > maxDt:
+                                        maxDt=dt
+                                        lastFile = path
                         try:
                             # get the email body
                             body = part.get_payload(decode=True).decode()
@@ -89,4 +98,4 @@ def receivemail():
     imap.close()
     imap.logout()
 
-    print(messages)
+    return maxDt, lastFile

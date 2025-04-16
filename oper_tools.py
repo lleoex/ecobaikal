@@ -19,6 +19,11 @@ import sys
 # import psycopg2
 # import
 from era2bas import append_dates
+
+from settings import Settings
+sets = Settings()
+
+
 plt.style.use('ggplot')
 font = {'family': 'verdana',
         'weight': 'bold',
@@ -296,14 +301,17 @@ def makeHydr(path):
     :param path:
     :return:
     '''
-    df = pd.read_excel(path)
+    df = pd.read_excel(path, names=['date','post','lev','q'])
+
     year = df['date'].dt.date.min().year
     riv = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
+    trans = {'Anga': 'Верхняя Заимка', 'Barg': 'Баргузин', 'Sele': 'Селенга Мостовой'}
     for r, name in riv.items():
-        outfile = 'D:/EcoBaikal/Data/Hydro/Baikal/' + r + '/hydr' + str(year)[2:4] + '.bas'
-        out = df.loc[df['post'] == name].reset_index().\
+        outfile = sets.EMG_HYDRO_DIR + r + '/hydr' + str(year)[2:4] + '.bas'
+        out = df.loc[df['post'] == trans[r]].reset_index().\
             drop(['index', 'lev', 'post'], axis=1)
-        writeHydr(out, 'D:/EcoBaikal/Data/Hydro/Baikal/' + r + '/', name=name, sbros=True)
+        writeHydr(out, os.path.join(sets.EMG_HYDRO_DIR,r), name=name, sbros=True)
+        #writeHydr(out, 'D:/EcoBaikal/Data/Hydro/Baikal/' + r + '/', name=name, sbros=True)
         # out.index += 1
         # out.to_csv(outfile, date_format = '%Y%m%d', sep='\t', na_rep='-99.0',
         #            quoting=csv.QUOTE_NONE, escapechar=' ',
@@ -313,6 +321,9 @@ def makeHydr(path):
 
 
 def writeHydr(df, path, **kwargs):
+    if not os.path.isdir(path):
+        os.mkdir(path)
+
     if 'date' in df:
         year = df['date'].dt.date.min().year
     else:
