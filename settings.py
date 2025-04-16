@@ -8,6 +8,7 @@ class Settings:
         self.GFS_BAS_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal/Data/Meteo/")
         self.EMG_HYDRO_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal/Data/Hydro/Baikal/")
         self.EMAIL_XLS_DIR = os.path.join(self.ROOT_DIR,"Data/")
+        self.rivers = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
         if not os.path.isdir(self.ROOT_DIR):
             self.mkdirs()
 
