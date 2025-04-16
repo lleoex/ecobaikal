@@ -213,28 +213,33 @@ def check_hydro(path, date_start):
     :param date_start:      Дата выпуска прогноза
     :return:
     """
-
+    result = False
     # если дата пришла как строка, преобразуем в дату
     if isinstance(date_start, str):
         date_start = datetime.datetime.strptime(date_start, '%Y-%m-%d')
     # путь до файла с текущим годом
     hyd_file = path + '\\hydr' + str(date_start.year)[2:4] + '.bas'
     # читаем из файла список станций
-    df = pd.read_csv(hyd_file, header=None, skiprows=3, delimiter=r"\s+|\t+", parse_dates=[1], dayfirst=True, index_col=[1],
+    if os.path.exists(hyd_file):
+        df = pd.read_csv(hyd_file, header=None, skiprows=3, delimiter=r"\s+|\t+", parse_dates=[1], dayfirst=True, index_col=[1],
                      na_values=-99.0, engine='python')
+
+
     # print(df.head())
     # nans = df[2].isnull().sum()
-    nulldata = df[df.index == (date_start - datetime.timedelta(days=1)).strftime('%Y-%m-%d')][2].isnull()
+        nulldata = df[df.index == (date_start - datetime.timedelta(days=1)).strftime('%Y-%m-%d')][2].isnull()
 
-    if nulldata.values == True:
-        print('Отсутствуют данные по расходам воды на дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
+        if nulldata.values == True:
+            print('Отсутствуют данные по расходам воды на дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
         # app_log.error(
         #     'Отсутствуют данные по расходам воды на дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
 
-    else:
-        print('Данные по расходам воды есть на дату выпуска прогноза ' + date_start.strftime('%d.%m.%Y') + '.')
+        else:
+            print('Данные по расходам воды есть на дату выпуска прогноза ' + date_start.strftime('%d.%m.%Y') + '.')
+            result = True
         # app_log.error(
         #     'Данные по расходам воды есть на дату выпуска прогноза ' + date_start.strftime('%d.%m.%Y') + '.')
+    return result
 
 
 def readShort(path, **kwargs):
