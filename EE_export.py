@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
+import os.path
+
 import geemap
 import ee
 from datetime import timedelta
@@ -77,7 +79,9 @@ def getGFS(date):
     period = [dateStart, dateEnd]  # задаём начало и конец периода
     dr = pd.date_range(period[0], period[1])
     bandTemp = 'temperature_2m_above_ground' # Канал GFS
-    path = 'd:/Data/GFS/temp' # Набор данных GFS
+    path = os.path.join(sets.GFS_TIFF_DIR, 'temp') # Набор данных GFS
+    if not os.path.exists(path):
+        os.makedirs(path)
     for d in dr: # Проходим по датам периода
         print(d)
         for i in range(len(day_list)): # далее по порядковым номерам (индексам) сроков прогноза
@@ -86,7 +90,9 @@ def getGFS(date):
             geemap.ee_export_image(gfs, path + '/' + str(d)[0:10] + '+' + str(i) + '.tif', region = geom) # Экспортируем растр прогноза в текущий день и на данный срок
 
     bandPrec = 'total_precipitation_surface' # Осадки в кг/кв.м, что в случае с водой соответствует мм
-    path = 'd:/Data/GFS/prec'
+    path = os.path.join(sets.GFS_TIFF_DIR,'prec')#'d:/Data/GFS/prec'
+    if not os.path.exists(path):
+        os.makedirs(path)
     for d in dr:
         for i in range(len(day_list)):
             gfs = ee.ImageCollection(collection).select(bandPrec).filterDate(str(d)[0:10]).filterBounds(geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).sum()

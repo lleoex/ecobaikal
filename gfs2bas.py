@@ -8,6 +8,9 @@ import re
 import shutil
 import numpy as np
 from era2bas import makeBas
+from settings import Settings
+
+sets = Settings()
 
 def tif2df(file):
     df = pd.DataFrame()
@@ -25,7 +28,7 @@ def tif2df(file):
 
 def tifProc(dir):
     os.chdir(dir)
-    pattern = str('*.tif')  # если нужен только один год то поставить 'ХХХХ*.tif'
+    pattern = str(f'{dir}\*.tif')  # если нужен только один год то поставить 'ХХХХ*.tif'
     listFiles = glob.glob(pattern, recursive=True)  # Список файлов tif на каждую дату
     print(listFiles)
     df = pd.DataFrame()
@@ -51,25 +54,26 @@ def makeFcstBas(df, wd, var, date):
         os.makedirs(wd + '/GFS/' + directory)
 
 
+
+
     # делаем файл с правильным названием
     if var == 'prec':  # обработка файлов с осадками
-        outfile = 'PRE' + str(df.index.min().year)[-2:] + '.bas'
+        #outfile = 'PRE' + str(df.index.min().year)[-2:] + '.bas'
+        outfile = wd + '/GFS/' + directory + '/PRE' + str(date.year)[-2:] + '.bas'
         # print(outfile)
     elif var == 'temp':
-        outfile = 'TEMP' + str(df.index.min().year)[-2:] + '.bas'
+        outfile = wd + '/GFS/' + directory + '/TEMP' + str(date.year)[-2:] + '.bas'
+        #outfile = 'TEMP' + str(df.index.min().year)[-2:] + '.bas'
         # print(outfile)
     # elif var == 'hurs':
     #     outfile = 'DEF' + str(df.index.min().year)[-2:] + '.bas'
 
-    if 'directory' in locals():
-        os.chdir(wd + '/GFS/' + directory)
-    else:
-        os.chdir(wd)
+
 
     # добавляем NA с 1 января и до 31 декабря, если их нет
     df = append_dates(df)
 
-    print(os.getcwd())
+
     # пишем в файл
     with open(outfile, 'w') as f:
 
@@ -95,8 +99,10 @@ def makeFcstBas(df, wd, var, date):
         cont = cont.replace(',', ' ')
         f.write(cont)
         f.close()
-    shutil.copy2('d:/EcoBaikal/Data/Meteo/GFS/MeteoStation.bas', os.getcwd())
+    shutil.copy2(os.path.join(sets.GFS_BAS_DIR,'GFS/MeteoStation.bas'), wd + '/GFS/' + directory )
     os.chdir(wd)
+
+
 
 
 def append_dates(df):
@@ -107,7 +113,7 @@ def append_dates(df):
         if df.index.min().month != 1: # & df.index.min().day != 1
             # если не с 1 января, то делаем пустой датафрейм с датами от 1 января до начала данных
             attic = pd.date_range(start=str(df.index.min().year) + '-01-01',
-                                  end=str(df.index.min() - timedelta(days=1))).date
+                                  end=str(df.index.min() - timedelta(days=1)))
             attic = pd.DataFrame(attic, columns=['date'])
             attic = attic.set_index(['date'])
             # присоединяем к данным
@@ -119,7 +125,7 @@ def append_dates(df):
         if df.index.max().month != 12:  # & df.index.max().day != 31:
             # если не до 31 декабря, то делаем пустой датафрейм с датами от конца данных до 31 декабря
             cellar = pd.date_range(start=str(df.index.max() + timedelta(days=1)),
-                                   end=str(df.index.min().year) + '-12-31').date
+                                   end=str(df.index.min().year) + '-12-31')
             cellar = pd.DataFrame(cellar, columns=['date'])
             cellar = cellar.set_index(['date'])
             # присоединяем к данным
@@ -138,26 +144,28 @@ def workflow(wd, outDir, var, date):
     :return:
     '''
     for v in var:
-        os.chdir(wd)
-        print(os.getcwd())
+        #os.chdir(wd)
+        #print(os.getcwd())
         df = tifProc(wd + v)
         df.index = pd.to_datetime(df['date'])
         # для GFS0
         gfs_0 = df[(df['horizon'] == 0) & (df.index.year == date.year)]
-        makeBas(gfs_0.drop(['date', 'horizon'], axis=1), outDir + '/' + 'GFS', v)
+        gfs_01 = gfs_0.drop(['date', 'horizon'], axis=1)
+        makeBas(gfs_01, outDir + '/' + 'GFS', v)
         print('Подготовлены данные GFS для ', date)
         # для обычных прогнозов
-        gfs = df[df.index.date == date]
+        gfs = df[df.index.date == date.date()]
         gfs['date'] = gfs.index.date + pd.to_timedelta(gfs['horizon'], 'd')
-        gfs.index = gfs['date']
-        gfs = gfs.drop(['date', 'horizon'], axis=1)
-        makeFcstBas(gfs, outDir, v, date)
+        gfs.index = pd.to_datetime(gfs['date'])
+
+        gfs1 = gfs.drop(['date', 'horizon'], axis=1)
+        makeFcstBas(gfs1, outDir, v, date)
         print('Подготовлены данные GFS для ', date, ' - ', (date + timedelta(days=10)))
 
 
 def gfsProc(today):
-    wd = 'd:/Data/GFS/'
-    outDir = 'd:/EcoBaikal/Data/Meteo/'
+    wd = sets.GFS_TIFF_DIR
+    outDir = sets.GFS_BAS_DIR
     var = ['temp', 'prec']
 
     workflow(wd, outDir, var, today)
