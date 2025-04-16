@@ -314,9 +314,24 @@ def makeHydr(path):
     trans = {'Anga': 'Верхняя Заимка', 'Barg': 'Баргузин', 'Sele': 'Селенга Мостовой'}
     for r, name in riv.items():
         outfile = sets.EMG_HYDRO_DIR + r + '/hydr' + str(year)[2:4] + '.bas'
-        out = df.loc[df['post'] == trans[r]].reset_index().\
-            drop(['index', 'lev', 'post'], axis=1)
-        writeHydr(out, os.path.join(sets.EMG_HYDRO_DIR,r), name=name, sbros=True)
+        if os.path.exists(outfile):
+            hydr_df = pd.read_csv(outfile, sep='\t', skiprows=3, names=['n', 'date', 'q'], usecols=[1, 2])
+            hydr_df['date'] = pd.to_datetime(hydr_df['date'], format='%Y%m%d')
+        else:
+            hydr_df = pd.date_range(start=str(year) + '-01-01',
+                                  end=str(year) + '-12-31')
+            hydr_df = pd.DataFrame(hydr_df, columns=['date'])
+            hydr_df['q'] = numpy.nan
+            #hydr_df = hydr_df.set_index(['date'])
+
+
+        #out = df.loc[df['post'] == trans[r]].reset_index().drop(['index', 'lev', 'post'], axis=1)
+        out = df.loc[df['post'] == trans[r]].reset_index().drop(['lev', 'post'], axis=1)
+        for index, row in out.iterrows():
+            hydr_df.loc[hydr_df['date'] == row['date'],'q'] = row['q']
+        writeHydr(hydr_df, os.path.join(sets.EMG_HYDRO_DIR, r), name=name)
+        #writeHydr(out, os.path.join(sets.EMG_HYDRO_DIR,r), name=name, sbros=True)
+
         #writeHydr(out, 'D:/EcoBaikal/Data/Hydro/Baikal/' + r + '/', name=name, sbros=True)
         # out.index += 1
         # out.to_csv(outfile, date_format = '%Y%m%d', sep='\t', na_rep='-99.0',
@@ -346,10 +361,11 @@ def writeHydr(df, path, **kwargs):
         header = ['Basin	Generic	Year	' + str(year) +
          ' \n 	1	0	21100 \n N	DATE	Qm3/s', '.']
 
-    df = append_dates(df)
+
 
     if isinstance(df.index, pd.DatetimeIndex):
         # df['date'] = df.index
+        df = append_dates(df)
         df = df.reset_index()
         df.index += 1
     else:

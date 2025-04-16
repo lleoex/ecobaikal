@@ -4,15 +4,18 @@ import geemap
 import ee
 from datetime import timedelta
 import pandas as pd
+from settings import Settings
 from oper_tools import check_meteo
 #  авторизация в GEE
-ee.Authenticate()
+#ee.Authenticate()
+#ee.Initialize(project = 'iwp-dev-383806')
 
-# service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
-# credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
-# ee.Initialize(credentials)#,project = 'iwp-sac-baikal')
-ee.Initialize(project = 'iwp-dev-383806')
 
+service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
+credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
+ee.Initialize(credentials)#,project = 'iwp-sac-baikal')
+
+sets = Settings()
 
 def setGeom():
     # границы по пространству
@@ -35,8 +38,8 @@ def setGeom():
 
 def getEra(date):
     # границы по времени
-    dateStart = '2022-01-01' # если нужно с какой-то определенной даты загрузить
-    # dateStart = date - timedelta(days=18) # если нужно загрузить за последние 10 дней
+    #dateStart = '2022-01-01' # если нужно с какой-то определенной даты загрузить
+    dateStart = date - timedelta(days=18) # если нужно загрузить за последние 10 дней
     dateEnd = date - timedelta(days=8)
     print('Запрашиваем данные ERA5Land за ', dateStart, dateEnd)
     # границы по пространству
@@ -47,7 +50,7 @@ def getEra(date):
              'prec': 'total_precipitation_sum'} # выбираем переменную
     for var, band in bands.items():
         coll = ee.ImageCollection(collection).filterBounds(geom).filterDate(period[0], period[1]).select(band)
-        path = 'd:/Data/ERA5Land/' + var  # директория для скачивания
+        path = sets.ERA_TIFF_DIR + var  # директория для скачивания
         geemap.ee_export_image_collection(coll, path,
                                           region=geom)  # экспортируем в нужную директорию для заданной области интересов
 

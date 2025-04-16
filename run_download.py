@@ -1,24 +1,24 @@
 import os.path
 from os import listdir
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
 import argparse
 import ecobaikal_shortterm
-#from EE_export import getEra, getGFS
+from EE_export import getEra, getGFS
 from era2bas import eraProc
 from gfs2bas import gfsProc
 from receiver import receivemail
-from oper_tools import makeHydr
+import oper_tools
 from settings import Settings
 
 
 workdir = ""
 sets = Settings()
 def getQEnPlusApi(dt:datetime):
-    #receivemail()
+    receivemail()
     files = [f for f in listdir(sets.EMAIL_XLS_DIR) if (os.path.isfile(os.path.join(sets.EMAIL_XLS_DIR, f)) and dt.strftime('%Y%m%d') in f)]
-    makeHydr(os.path.join(sets.EMAIL_XLS_DIR,files[0]))
+    oper_tools.makeHydr(os.path.join(sets.EMAIL_XLS_DIR,files[0]))
 
 def checkQEnPlus(dt:datetime) -> bool:
     flag_path = os.path.join(workdir,dt.strftime('%Y%m%d'),'qflag.txt')
@@ -64,7 +64,10 @@ if __name__ == '__main__':
     if src == "Q":
         getQEnPlusApi(today)
     elif src == "ERA":
-        #getEra(today)
+        if not oper_tools.check_meteo(sets.ERA_BAS_DIR, today - timedelta(days=8)):
+            #getEra(today)
+            # сделать bas из tifов ERA5Land
+            eraProc(today)
         print("ERA")
     elif src == "GFS":
         #getGFS(today)

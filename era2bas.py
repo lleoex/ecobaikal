@@ -1,33 +1,38 @@
 # -*- coding: utf-8 -*-
 #%%
+import datetime
+
 import matplotlib.pyplot
 import rioxarray
 import geopandas as gp
 import glob
 import pandas as pd
 import os
-import datetime as dt
+
+from settings import Settings
+
+sets = Settings()
 
 
-def tif2df(wd, x, var):
+def tif2df(filePath:str, var:str):
     '''
 
     :param wd:
-    :param x:
+    :param filePath:
     :param var:
     :return:
     '''
     # print(x)
-    d = dt.datetime.strptime(x[x.rfind('\\')+1:x.find('.')], '%Y%m%d') # Извлекаем из названия дату (без расширения), переводим её в нужный формат
+    d = datetime.datetime.strptime(filePath[filePath.rfind('\\') + 1:filePath.find('.')], '%Y%m%d') # Извлекаем из названия дату (без расширения), переводим её в нужный формат
     # переводим tif в df
-    grd = rioxarray.open_rasterio(x) # Открываем текущий tif-файл
+    grd = rioxarray.open_rasterio(filePath) # Открываем текущий tif-файл
     df = grd[0].to_dataframe(name='value').reset_index()[['y', 'x', 'value']]# преобразуем его во фрейм
     grd.close() # закрываем растр, освобождаем память
     del grd
     # делаем gdf
     df = gp.GeoDataFrame(df, geometry=gp.points_from_xy(df['x'], df['y']), crs='EPSG:4326')
     # буфер водосбора для обрезки точек (с ~20000 до 9000)
-    poly = gp.read_file(r'D:/Data/ERA5Land/shp/baikal_basin_buff10km.shp').to_crs(crs=4326)
+    poly = gp.read_file(os.path.join(sets.ERA_TIFF_DIR,'shp','baikal_basin_buff10km.shp')).to_crs(crs=4326)
     # пересечение по пространству
     df = gp.sjoin(df, poly)
     # вытаскиваем каждую третью точку (для оптимизации размера), только значения без координат
@@ -52,7 +57,7 @@ def append_dates(df):
         if df.index.min().month != 1: # & df.index.min().day != 1
             # если не с 1 января, то делаем пустой датафрейм с датами от 1 января до начала данных
             attic = pd.date_range(start=str(df.index.min().year) + '-01-01',
-                                  end=str(df.index.min() - dt.timedelta(days=1)))
+                                  end=str(df.index.min() - datetime.timedelta(days=1)))
             attic = pd.DataFrame(attic, columns=['date'])
             attic = attic.set_index(['date'])
             # присоединяем к данным
@@ -62,7 +67,7 @@ def append_dates(df):
         # проверяем, заканчиваются ли данные 31 декабря
         if df.index.max().month != 12:  # & df.index.max().day != 31:
             # если не до 31 декабря, то делаем пустой датафрейм с датами от конца данных до 31 декабря
-            cellar = pd.date_range(start=str(df.index.max() + dt.timedelta(days=1)),
+            cellar = pd.date_range(start=str(df.index.max() + datetime.timedelta(days=1)),
                                    end=str(df.index.min().year) + '-12-31')
             cellar = pd.DataFrame(cellar, columns=['date'])
             cellar = cellar.set_index(['date'])
@@ -173,20 +178,22 @@ def makeBas(df, wd, var):
         f.close()
 
 
-def workflow(fromDir, toDir, var):
+def workflow(dt:datetime, fromDir, toDir, var):
     '''
-
     :param fromDir:
     :param toDir:
     :param var:
     :return:
     '''
+
+
     # добавить разбивку по годам исходных файлов
-    for i in var:
-        os.chdir(fromDir)
-        os.chdir(fromDir + '/' + i)
+    for v in var:
+        vardir = os.path.join(fromDir,v)
+        #os.chdir(fromDir)
+        #os.chdir(fromDir + '/' + i)
         # print(os.getcwd())
-        pattern = str(os.getcwd() + '/' + '*.tif') # если нужен только один год то поставить 'ХХХХ*.tif' - изменить
+        pattern = vardir + '/' + f'{dt.year}*.tif' # если нужен только один год то поставить 'ХХХХ*.tif' - изменить
         ListFiles = glob.glob(pattern, recursive=True)  # Список файлов tif на каждую дату
         print(ListFiles)
         all_df = pd.DataFrame()  # пустой список для записи фреймов за каждую дату
@@ -194,9 +201,10 @@ def workflow(fromDir, toDir, var):
             print(f)
             # если нет MeteoStation.bas в toDir, то делаем его
             if not os.path.isfile(toDir + '/MeteoStation.bas'):
-                MSFromTif(f, toDir)
-                os.chdir(fromDir)
-            dat = tif2df(fromDir, f, i)
+                #MSFromTif(f, toDir)
+                #os.chdir(fromDir)
+                print()
+            dat = tif2df(f, v)
             all_df = pd.concat([all_df, dat], axis=1, ignore_index=True)
         all_df = all_df.T
         # print(all_df.head())
@@ -204,15 +212,15 @@ def workflow(fromDir, toDir, var):
         all_df.drop(0, axis=1, inplace=True)
         # all_df.to_csv(i + '.csv', sep = ';')
         for y in all_df.index.year.unique():
-            makeBas(all_df.loc[str(y)], toDir, i)
+            makeBas(all_df.loc[str(y)], toDir, v)
 
 
-def eraProc():
+def eraProc(dt:datetime):
     # all files in wd
-    fromDir = 'D:/Data/ERA5Land/'
-    toDir = 'D:/EcoBaikal/Data/Meteo/Eraland/'
+    fromDir = sets.ERA_TIFF_DIR
+    toDir = sets.ERA_BAS_DIR
     var = ['temp', 'prec']
-    workflow(fromDir, toDir, var)
+    workflow(dt, fromDir, toDir, var)
 
 
 # главный модуль
