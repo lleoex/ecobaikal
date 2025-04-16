@@ -119,9 +119,9 @@ def ecocycle(dates, lead, params):
             if not os.path.isfile(params['dir_CT'] + '\\' +
                                   datetime.date(model_end.year, 5, 1).strftime("%Y%m%d") +
                                   '\\INPCURV.BAS'):
-                model_start = datetime.date(model_end.year, 1, 1)
+                model_start = datetime.date(2016, 1, 1)
             else:
-                model_start = datetime.date(2022, 5, 1)
+                model_start = datetime.date(model_end.year, 1, 1)
 
             old_meteo = params['meteo_path']
             params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
@@ -133,7 +133,6 @@ def ecocycle(dates, lead, params):
             model_start = model_end
             model_end = date
             # КТ по GFS0 для начала расчета
-            model_start = date - timedelta(days=8)
             params['meteo_path'] = old_meteo + '\\GFS\\'
             params['dir_out'] = params['dir_CT']
             print('GFS_0', model_start, model_end)
@@ -143,25 +142,24 @@ def ecocycle(dates, lead, params):
 
         # сам расчет
         print(r'Старт прогноза')
-
         # для метеорологических (не ансамблевых) прогнозов меняем папку с метео на нужную, сохраняя старую
         old_meteo = params['meteo_path']
-        params['meteo_path'] = params['meteo_path'] + '\\GFS\\' + date.strftime("%Y%m%d") + '\\' # + 'TEMP.BAS'
+        params['meteo_path'] = params['meteo_path'] + '\\GFS\\' + date.strftime("%Y%m%d") + '\\'
         model_start = date
         model_end = model_start + datetime.timedelta(days=lead)
         print(model_start, model_end)
         # первый расчет прогноза без коррекции
         ecorun(model_start, model_end, **params)
-        # коррекция и запись sbrosXX.bas
 
+        # коррекция и запись sbrosXX.bas
         short_corr(date=date, res=params['dir_out'] + '/' + model_end.strftime("%Y%m%d") + '/' + params['source_name'],
                    pathCoeff='d:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas',
-                   pathFactQ='d:/Data/Hydro/buryat_q_2022.xlsx')
+                   pathFactQ='d:/Data/Hydro/buryat_q_' + str(date.year) + '.xlsx')
         # запуск прогноза с заливкой sbrosXX.bas
         # меняем значения в sbros.bas в зависимости от варианта расчета: "0" если прогноз створам, "4" если в Байкал
         with open(params['baspath'] + '\sbros.bas', 'w') as sbros:
             sbros.truncate()
-            sbros.write(' 4 \n 1 2 3 4')
+            sbros.write(' 4 \n 1 2 3')
             sbros.close()
 
         # второй расчет прогноза с коррекцией
@@ -169,7 +167,7 @@ def ecocycle(dates, lead, params):
         # выключаем сбросы в sbros.bas
         with open(params['baspath'] + '\sbros.bas', 'w') as sbros:
             sbros.truncate()
-            sbros.write(' 0 \n 1 2 3 4')
+            sbros.write(' 0 \n 1 2 3')
             sbros.close()
         params['meteo_path'] = old_meteo
 

@@ -47,7 +47,7 @@ def sendNoQAlert(date):
 # Основной скрипт запуска цепочки бесшовного прогноза.
 if __name__ == '__main__':
     # today =  datetime.date.today()
-    today = datetime.date(2022, 4, 13)
+    today = datetime.date(2021, 5, 1)
     print(today)
     # загрузка расходов воды по FTP от En+
     #     getQEnPlusApi(today)

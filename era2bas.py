@@ -45,7 +45,7 @@ def tif2df(wd, x, var):
 
 
 def append_dates(df):
-    print(df.head())
+    # print(df.head())
     # проверяем, за один ли год у нас данные
     if df.index.min().year == df.index.max().year:
         # если данные за один год, то проверяем, начинаются ли они с 1 января
@@ -185,8 +185,8 @@ def workflow(fromDir, toDir, var):
     for i in var:
         os.chdir(fromDir)
         os.chdir(fromDir + '/' + i)
-        print(os.getcwd())
-        pattern = str(os.getcwd() + '/' + '2022*.tif') # если нужен только один год то поставить 'ХХХХ*.tif' - изменить
+        # print(os.getcwd())
+        pattern = str(os.getcwd() + '/' + '*.tif') # если нужен только один год то поставить 'ХХХХ*.tif' - изменить
         ListFiles = glob.glob(pattern, recursive=True)  # Список файлов tif на каждую дату
         print(ListFiles)
         all_df = pd.DataFrame()  # пустой список для записи фреймов за каждую дату
@@ -199,7 +199,7 @@ def workflow(fromDir, toDir, var):
             dat = tif2df(fromDir, f, i)
             all_df = pd.concat([all_df, dat], axis=1, ignore_index=True)
         all_df = all_df.T
-        print(all_df.head())
+        # print(all_df.head())
         all_df.index = all_df[0]
         all_df.drop(0, axis=1, inplace=True)
         # all_df.to_csv(i + '.csv', sep = ';')

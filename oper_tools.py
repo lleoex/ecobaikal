@@ -172,26 +172,32 @@ def check_meteo(path, date_start):
         # путь до файла с текущим годом
         met_file =  path + '/' + v + str(date_start.year)[2:4] + '.bas'
         # читаем из файла список станций
-        with open(met_file) as f:
-            # print(f.name)
-            f.readline()
-            f.readline()
-            ind = f.readline().rstrip().split(sep=",")
-            f.close()
-        ind.insert(0, 'date')
-        # ind.pop(-1)
-        # print(ind)
-        df = pd.read_csv(met_file, header=None, skiprows=6, delimiter=r"\s+", names=ind, parse_dates=['date'],
-                         dayfirst=False, index_col='date', na_values=-99.0)
-
-        nulldata = df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values == len(ind) - 1
-        non_nulldata = len(ind) - 1 - df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values
-        if nulldata:
-            print('Отсутствуют данные по ' + v + ' за дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
-            flag.append(False)
+        try:
+            f = open(met_file)
+        except FileNotFoundError:
+            print('Нет данных прогноза GFS на ', date_start)
+            return False
         else:
-            print('Данные по ' + v + ' есть за дату выпуска прогноза с ' + str(non_nulldata).strip("[]") + ' станций.')
-            flag.append(True)
+            with open(met_file) as f:
+                # print(f.name)
+                f.readline()
+                f.readline()
+                ind = f.readline().rstrip().split(sep=",")
+                f.close()
+            ind.insert(0, 'date')
+            # ind.pop(-1)
+            # print(ind)
+            df = pd.read_csv(met_file, header=None, skiprows=6, delimiter=r"\s+", names=ind, parse_dates=['date'],
+                            dayfirst=False, index_col='date', na_values=-99.0)
+
+            nulldata = df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values == len(ind) - 1
+            non_nulldata = len(ind) - 1 - df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values
+            if nulldata:
+                print('Отсутствуют данные по ' + v + ' за дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
+                flag.append(False)
+            else:
+                print('Данные по ' + v + ' есть за дату выпуска прогноза с ' + str(non_nulldata).strip("[]") + ' станций.')
+                flag.append(True)
     if numpy.mean(flag) == 1:
         return True
     else:
@@ -267,7 +273,7 @@ def short_corr(date, res, pathCoeff, pathFactQ):
                        left_on=['date', 'river'],
                        right_on=['date', 'post'])
     df_corr.loc[:, 'q'] = df_corr.loc[:, 'q'].ffill()
-    df_corr['qcorr'] = df_corr['value'] + abs(df_corr['value'] - df_corr['q']) * df_corr['b']
+    df_corr['qcorr'] = df_corr['value'] + (df_corr['q'] - df_corr['value']) * df_corr['b']
     df_corr['date'] = df_corr['date'].dt.date
     df_corr = df_corr.loc[df_corr['river'] != 'baikal', ["date", "river", "qcorr"]]
     df_corr['date'] = pd.to_datetime(df_corr['date'], format='%Y%m%d')
@@ -286,7 +292,7 @@ def short_corr(date, res, pathCoeff, pathFactQ):
     df_fact = df_fact.pivot(index='date', columns='riv', values='q')
     df_fact = df_fact[:date]
     df_fact = pd.concat([df_fact, df_corr], axis=0, ignore_index=False)
-    df_fact = append_dates(df_fact)
+    # df_fact = append_dates(df_fact)
     for column in df_fact:
         # print(column)
         path = 'D:/EcoBaikal/Data/Hydro/Baikal/' + str([k for k, v in riv.items() if v == column][0])
@@ -332,12 +338,16 @@ def writeHydr(df, path, **kwargs):
         outFile = path + '/sbros' + str(year)[2:4] + '.bas'
     else:
         outFile = path + '/hydr' + str(year)[2:4] + '.bas'
+
     if kwargs.get('name'):
         header = ['Basin	' + kwargs.get('name')[0] + '	Year	' + str(year) +
          ' \n 	1	0	21100 \n N	DATE	Qm3/s', '.']
     else:
         header = ['Basin	Generic	Year	' + str(year) +
          ' \n 	1	0	21100 \n N	DATE	Qm3/s', '.']
+
+    df = append_dates(df)
+
     if isinstance(df.index, pd.DatetimeIndex):
         # df['date'] = df.index
         df = df.reset_index()
