@@ -10,7 +10,6 @@ from gfs2bas import gfsProc
 from ecobaikal_shortterm import read_params, ecocycle as ec_st
 from ecobaikal_longterm import ecocycle as ec_lt, ens_stat
 import oper_tools
-
 from settings import Settings
 
 sets = Settings()
@@ -85,7 +84,9 @@ if __name__ == '__main__':
 # долгосрочный прогноз
 #     params = read_params(os.path.join(sets.ROOT_DIR, sets.MODEL_DIR, 'baikal_x+60.txt'))
 #     ec_lt([today + datetime.timedelta(days=10)], 2, params)
-    ens = sets.ROOT_DIR + '/' + sets.LONG_RES + '/' + str(datetime.date(today.year, today.month + 3, 1).strftime('%Y%m%d')) + '_ens.txt'
+    ens = sets.LONG_RES + '/' + str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '/' + \
+          str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '_ens.txt'
+
     ens_stat(ens)
 
 

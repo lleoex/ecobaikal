@@ -11,7 +11,7 @@ class Settings:
         self.SHORT_CT = os.path.join(self.ROOT_DIR,"EcoBaikal/Archive/002/CT")
         self.SHORT_RES = os.path.join(self.ROOT_DIR, "EcoBaikal/Archive/002/RES")
         self.LONG_CT = os.path.join(self.ROOT_DIR, "EcoBaikal/Archive/003/CT")
-        self.LONG_RES = os.path.join(self.ROOT_DIR, "EcoBaikal/Archive/003/RES")
+        self.LONG_RES = os.path.join(self.ROOT_DIR, "EcoBaikal/Archive/003/ENS")
         self.MODEL_DIR = os.path.join(self.ROOT_DIR, "EcoBaikal/model")
         self.SOURCE_NAME = os.path.join(self.ROOT_DIR, "QCURVBaikal                        .txt")
         self.rivers = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
