@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import os
 
@@ -12,7 +13,16 @@ sets = Settings()
 
 if __name__ == '__main__':
     # today =  datetime.date.today()
-    today = datetime.date(2025, 4, 17)
+
+    parser = argparse.ArgumentParser(description='downloader',)
+    parser.add_argument('--date_today', type=str, help='Дата начала расчета гггг-мм-дд', required=True)
+    #parser.add_argument('--source', choices=['Q', 'GFS', 'ERA'], required=True)
+
+    args, unknown = parser.parse_known_args()
+
+
+    today = datetime.datetime.strptime(args.date_today, '%Y-%m-%d').date()
+    #today = datetime.date(2025, 4, 17)
     print(today)
 
     os.chdir(sets.MODEL_DIR)
