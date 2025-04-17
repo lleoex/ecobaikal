@@ -44,7 +44,7 @@ def getEra(date):
     # границы по времени
     # dateStart = '2024-01-01' # если нужно с какой-то определенной даты загрузить
     dateStart = date - timedelta(days=18) # если нужно загрузить за последние 10 дней
-    dateEnd = date - timedelta(days=8)
+    dateEnd = date - timedelta(days=7)
     print('Запрашиваем данные ERA5Land за ', dateStart, dateEnd)
     # границы по пространству
     geom = setGeom()

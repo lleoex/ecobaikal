@@ -1,7 +1,8 @@
 import os
 class Settings:
     def __init__(self):
-        self.ROOT_DIR = "D:/"
+        #self.ROOT_DIR = "D:/"
+        self.ROOT_DIR = "C:/usr/data/project/en"
         self.ERA_TIFF_DIR = os.path.join(self.ROOT_DIR,"Data/ERA5Land/")
         self.ERA_BAS_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal/Data/Meteo/Eraland/")
         self.GFS_TIFF_DIR = os.path.join(self.ROOT_DIR,"Data/GFS/")

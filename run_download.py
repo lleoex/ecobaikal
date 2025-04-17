@@ -41,7 +41,7 @@ if __name__ == '__main__':
         if not haveQ:
             getQEnPlusApi(today)
         haveQ = True
-        for k, v in sets.rivers:
+        for k in sets.rivers:
             haveQ = haveQ and oper_tools.check_hydro(os.path.join(sets.EMG_HYDRO_DIR, k), today)
         result = haveQ
     elif src == "ERA":
@@ -51,12 +51,19 @@ if __name__ == '__main__':
             eraProc(today)
         result = oper_tools.check_meteo(sets.ERA_BAS_DIR, today - timedelta(days=8))
     elif src == "GFS":
-        gfs_dir=os.path.join(sets.GFS_BAS_DIR,today.strftime(format='%Y%m%d'))
-        if not oper_tools.check_meteo(gfs_dir, today):
-            #getGFS(today)
+        gfs_dir_fore=os.path.join(sets.GFS_BAS_DIR,'GFS/',today.strftime(format='%Y%m%d'))
+        gfs_dir_an = os.path.join(sets.GFS_BAS_DIR, 'GFS/')
+        haveGfsFore = oper_tools.check_meteo(gfs_dir_fore, today+timedelta(days=9))
+        haveGfsAn = oper_tools.check_meteo(gfs_dir_an, today)
+        haveGfs = haveGfsFore and haveGfsAn
+        if not haveGfs:
+            getGFS(today)
             # сделать bas из tifов GFS
             gfsProc(today)
-        result = oper_tools.check_meteo(gfs_dir, today)
+        haveGfsFore = oper_tools.check_meteo(gfs_dir_fore, today+timedelta(days=9))
+        haveGfsAn = oper_tools.check_meteo(gfs_dir_an, today)
+        haveGfs = haveGfsFore and haveGfsAn
+        result = haveGfs
     else:
         print(f'nothing to do with source={src}')
 
