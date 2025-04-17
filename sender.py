@@ -44,7 +44,7 @@ def sendmail(subj:str, body:str, attacments:list):
                                filename=filename)
 
     server = smtp.SMTP_SSL('smtp.yandex.ru')
-    server.set_debuglevel(1)
+    #server.set_debuglevel(1)
     server.ehlo(_from)
     server.login(login, passwd)
     server.auth_plain()
