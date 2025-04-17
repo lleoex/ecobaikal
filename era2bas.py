@@ -195,20 +195,20 @@ def workflow(dt:datetime, fromDir, toDir, var):
         # print(os.getcwd())
         pattern = vardir + '/' + f'{dt.year}*.tif' # если нужен только один год то поставить 'ХХХХ*.tif' - изменить
         ListFiles = glob.glob(pattern, recursive=True)  # Список файлов tif на каждую дату
-        print(ListFiles)
+        #print(ListFiles)
         all_df = pd.DataFrame()  # пустой список для записи фреймов за каждую дату
         for f in ListFiles:  # цикл по файлам
             print(f)
             # если нет MeteoStation.bas в toDir, то делаем его
-            if not os.path.isfile(toDir + '/MeteoStation.bas'):
+            #if not os.path.isfile(toDir + '/MeteoStation.bas'):
                 #MSFromTif(f, toDir)
                 #os.chdir(fromDir)
-                print()
+            #    print()
             dat = tif2df(f, v)
             all_df = pd.concat([all_df, dat], axis=1, ignore_index=True)
         all_df = all_df.T
         # print(all_df.head())
-        all_df.index = all_df[0]
+        all_df.index = pd.DatetimeIndex(all_df[0])
         all_df.drop(0, axis=1, inplace=True)
         # all_df.to_csv(i + '.csv', sep = ';')
         for y in all_df.index.year.unique():

@@ -189,15 +189,20 @@ def check_meteo(path, date_start):
             # print(ind)
             df = pd.read_csv(met_file, header=None, skiprows=6, delimiter=r"\s+", names=ind, parse_dates=['date'],
                             dayfirst=False, index_col='date', na_values=-99.0)
-
-            nulldata = df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values == len(ind) - 1
-            non_nulldata = len(ind) - 1 - df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values
-            if nulldata:
-                print('Отсутствуют данные по ' + v + ' за дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
-                flag.append(False)
+            if df.size > 0:
+                nulldata = df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values == len(ind) - 1
+                non_nulldata = len(ind) - 1 - df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values
+                if nulldata:
+                    print('Отсутствуют данные по ' + v + ' за дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
+                    flag.append(False)
+                else:
+                    print('Данные по ' + v + ' есть за дату выпуска прогноза с ' + str(non_nulldata).strip("[]") + ' станций.')
+                    flag.append(True)
             else:
-                print('Данные по ' + v + ' есть за дату выпуска прогноза с ' + str(non_nulldata).strip("[]") + ' станций.')
-                flag.append(True)
+                print('Отсутствуют данные по ' + v + ' за дату выпуска прогноза: ' + date_start.strftime(
+                    '%d.%m.%Y') + '.')
+                flag.append(False)
+
     if numpy.mean(flag) == 1:
         return True
     else:
@@ -221,7 +226,7 @@ def check_hydro(path, date_start):
     hyd_file = path + '\\hydr' + str(date_start.year)[2:4] + '.bas'
     # читаем из файла список станций
     if os.path.exists(hyd_file):
-        df = pd.read_csv(hyd_file, header=None, skiprows=3, delimiter=r"\s+|\t+", parse_dates=[1], dayfirst=True, index_col=[1],
+        df = pd.read_csv(hyd_file, header=None, skiprows=3, delimiter=r"\s+|\t+", parse_dates=[1], date_format ='%Y%m%d',dayfirst=True, index_col=[1],
                      na_values=-99.0, engine='python')
 
 
@@ -252,7 +257,7 @@ def readShort(path, **kwargs):
 
     if kwargs.get('coef') == True:
         df = pd.melt(df, id_vars=['lag', 'date']).reset_index()
-        coef = pd.read_csv('d:\EcoBaikal\Basin\Baik\Bas\X10_corr.bas', sep=';')
+        coef = pd.read_csv(os.path.join(sets.MODEL_BAS_DIR, 'X10_corr.bas'), sep=';')
         df = pd.merge(df, coef, 'left', left_on=['variable', 'lag'], right_on=['river', 'lag'])
     return df
 
@@ -288,7 +293,8 @@ def short_corr(date, res, pathCoeff, pathFactQ):
     df_fact = pd.DataFrame()
     riv = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
     for r, name in riv.items():
-        path = 'D:/EcoBaikal/Data/Hydro/Baikal/' + r + '/hydr' + str(date.year)[2:4] + '.bas'
+        #path = 'c:/EcoBaikal/Data/Hydro/Baikal/' + r + '/hydr' + str(date.year)[2:4] + '.bas'
+        path = os.path.join(sets.EMG_HYDRO_DIR,r,'hydr' + str(date.year)[2:4] + '.bas')
         df = pd.read_csv(path, sep='\t', skiprows=3, names=['n', 'date', 'q'], usecols=[1, 2])
         df['riv'] = name
         df_fact = pd.concat([df_fact, df], axis=0)
@@ -300,7 +306,8 @@ def short_corr(date, res, pathCoeff, pathFactQ):
     # df_fact = append_dates(df_fact)
     for column in df_fact:
         # print(column)
-        path = 'D:/EcoBaikal/Data/Hydro/Baikal/' + str([k for k, v in riv.items() if v == column][0])
+        #path = 'c:/EcoBaikal/Data/Hydro/Baikal/' + str([k for k, v in riv.items() if v == column][0])
+        path = sets.EMG_HYDRO_DIR + str([k for k, v in riv.items() if v == column][0])
         # print(path)
         writeHydr(df_fact[column], path, sbros=True, name=column)
     # print(df_fact.head())
@@ -403,7 +410,9 @@ def readQFact(path):
 def graphShort(res):
     prog = readShort(res)
     prog.drop('lag', axis=1).plot.line(x='date', subplots=[('angara', 'barguzin'), ('selenga', 'baikal')])
-    plt.show()
+    #plt.show()
+    plt.savefig(sets.SHORT_RES + '/' +(prog['date'][0]+ timedelta(days=10)).strftime("%Y%m%d") + '/x+10' + '.png',
+                dpi=100, bbox_inches='tight')
 
 
 # главный модуль

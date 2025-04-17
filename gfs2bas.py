@@ -119,7 +119,7 @@ def append_dates(df):
             # присоединяем к данным
             df = pd.concat([df, attic], ignore_index=False)
             df = df.sort_index()
-        print(df.index.min().month)
+        #print(df.index.min().month)
 
         # проверяем, заканчиваются ли данные 31 декабря
         if df.index.max().month != 12:  # & df.index.max().day != 31:
@@ -155,8 +155,8 @@ def workflow(wd, outDir, var, date):
         print('Подготовлены данные GFS для ', date)
         # для обычных прогнозов
         gfs = df[df.index.date == date.date()]
-        gfs['date'] = gfs.index.date + pd.to_timedelta(gfs['horizon'], 'd')
-        gfs.index = pd.to_datetime(gfs['date'])
+        #gfs['date'] = pd.to_datetime(gfs.index.date) + pd.to_timedelta(gfs['horizon'], 'd')
+        gfs.index = pd.to_datetime(gfs.index.date) + pd.to_timedelta(gfs['horizon'], 'd')
 
         gfs1 = gfs.drop(['date', 'horizon'], axis=1)
         makeFcstBas(gfs1, outDir, v, date)

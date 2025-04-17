@@ -11,6 +11,9 @@ import argparse
 # import logging
 # from logging.handlers import RotatingFileHandler
 from oper_tools import check_meteo, short_corr, graphShort
+from settings import Settings
+
+sets = Settings()
 
 def ecorun(date_start, date_end, meteo_path, hydro_path, baspath, exepath, exename, ens_flag, dir_CT, dir_out,
            source_name, year_start, year_end):
@@ -153,8 +156,9 @@ def ecocycle(dates, lead, params):
 
         # коррекция и запись sbrosXX.bas
         short_corr(date=date, res=params['dir_out'] + '/' + model_end.strftime("%Y%m%d") + '/' + params['source_name'],
-                   pathCoeff='d:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas',
-                   pathFactQ='d:/Data/Hydro/buryat_q_' + str(date.year) + '.xlsx')
+                   pathCoeff=os.path.join(sets.MODEL_BAS_DIR, 'X10_corr.bas'),
+                   pathFactQ=os.path.join(sets.HYDRO_FACT_DIR,'buryat_q_' + str(date.year) + '.xlsx')
+                   )
         # запуск прогноза с заливкой sbrosXX.bas
         # меняем значения в sbros.bas в зависимости от варианта расчета: "0" если прогноз створам, "4" если в Байкал
         with open(params['baspath'] + '\sbros.bas', 'w') as sbros:

@@ -7,9 +7,10 @@ import os
 def sendmail(subj:str, body:str, attacments:list):
     login = 'ecomag.baikal@iwp.ru'
     _from = 'ecomag.baikal@iwp.ru'
-    #_to = ['gonchukovlv@yandex.ru', 'gonchukov-lv@ferhri.ru', 'moreido@mail.ru']
-    _to = ['gonchukovlv@yandex.ru', 'gonchukov-lv@ferhri.ru']
-    passwd = 'T1Wcy^,)FCxZ}!m'
+    _to = ['gonchukovlv@yandex.ru', 'gonchukov-lv@ferhri.ru', 'moreido@mail.ru']
+    #_to = ['gonchukovlv@yandex.ru', 'gonchukov-lv@ferhri.ru']
+    #passwd = 'T1Wcy^,)FCxZ}!m'
+    passwd = 'jxnejmhomhlvarjc'
     #message = body
 
     msg = EmailMessage()
@@ -24,7 +25,7 @@ def sendmail(subj:str, body:str, attacments:list):
     # Open the files in binary mode.  You can also omit the subtype
     # if you want MIMEImage to guess it.
     for path in attacments:
-        filename = os.path.split(path)[1]
+        filename = os.path.split(path)[-1]
         if not os.path.isfile(path):
             continue
         # Guess the content type based on the file's extension.  Encoding

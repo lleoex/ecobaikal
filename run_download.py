@@ -40,6 +40,7 @@ if __name__ == '__main__':
             haveQ = haveQ and oper_tools.check_hydro(os.path.join(sets.EMG_HYDRO_DIR,k),today)
         if not haveQ:
             getQEnPlusApi(today)
+        #getQEnPlusApi(today)
         haveQ = True
         for k in sets.rivers:
             haveQ = haveQ and oper_tools.check_hydro(os.path.join(sets.EMG_HYDRO_DIR, k), today)
