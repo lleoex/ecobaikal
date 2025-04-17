@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 /iwp-sac-baikal-0f874cc5b815.json
 *.xlsx
+/.idea
