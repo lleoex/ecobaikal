@@ -4,10 +4,13 @@ import mimetypes
 
 import os
 
+from settings import Settings
+sets = Settings()
+
 def sendmail(subj:str, body:str, attacments:list):
     login = 'ecomag.baikal@iwp.ru'
     _from = 'ecomag.baikal@iwp.ru'
-    _to = ['gonchukovlv@yandex.ru', 'gonchukov-lv@ferhri.ru', 'moreido@mail.ru']
+    _to = sets.emails_p
     #_to = ['gonchukovlv@yandex.ru', 'gonchukov-lv@ferhri.ru']
     #passwd = 'T1Wcy^,)FCxZ}!m'
     passwd = 'jxnejmhomhlvarjc'
