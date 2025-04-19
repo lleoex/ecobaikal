@@ -11,16 +11,17 @@ $dt = Get-Date
 $dt = $dt.AddDays(0).ToString("yyyy-MM-dd")
 
 echo $dt
+logfile = $dt + ".log"
 
 
 
 $py_dir = "D:\ecobaikal\runpy\ecobaikal"
 & conda activate ecomag
-& python $py_dir\run_download.py --date_today=$dt --source=Q > $dt.log
+& python $py_dir\run_download.py --date_today=$dt --source=Q > $logfile 2>&1
 
-& python $py_dir\run_download.py --date_today=$dt --source=GFS >> $dt.log
+& python $py_dir\run_download.py --date_today=$dt --source=GFS >> $logfile 2>&1
 
-& python $py_dir\run_download.py --date_today=$dt --source=ERA >> $dt.log
+& python $py_dir\run_download.py --date_today=$dt --source=ERA >> $logfile 2>&1
 
-& python $py_dir\run_ecomag.py --date_today=$dt > $dt.log
+& python $py_dir\run_ecomag.py --date_today=$dt > $logfile 2>&1
 
