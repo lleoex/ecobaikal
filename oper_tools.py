@@ -219,6 +219,7 @@ def check_hydro(path, date_start):
     :return:
     """
     result = False
+    print(f"check hydr.bas for {path} at {date_start}")
     # если дата пришла как строка, преобразуем в дату
     if isinstance(date_start, str):
         date_start = datetime.datetime.strptime(date_start, '%Y-%m-%d')
