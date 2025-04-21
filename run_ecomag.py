@@ -35,6 +35,8 @@ if __name__ == '__main__':
     files_to_send = []
     fname = os.path.join(sets.SHORT_RES, f'{(today+datetime.timedelta(days=10)).strftime("%Y%m%d")}/x+10.png')
     files_to_send.append(fname)
+    fname = os.path.join(sets.SHORT_RES, f'{(today + datetime.timedelta(days=10)).strftime("%Y%m%d")}/x+10.xlsx')
+    files_to_send.append(fname)
 
     #sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', [fname])
 
