@@ -417,17 +417,24 @@ def graphShort(res):
     prog.drop('lag', axis=1).to_excel(sets.SHORT_RES + '/' + (prog['date'][0] + timedelta(days=10)).strftime("%Y%m%d") +
                                       '/' + 'x+10.xlsx', index=False)
     # рисунок
-    axes = prog.drop('lag', axis=1).plot(x='date', style='.-', layout=(2, 2), subplots=True, figsize=(10, 10),
+    axes = prog.drop('lag', axis=1).plot(x='date', style='.-', layout=(2, 2), subplots=True, figsize=(20, 10),
                                        title = 'Прогноз притока в Иркутское вдхр. от ' +
                                                prog['date'][0].strftime("%d.%m.%Y"), xlabel='Дата',
                                        sharex=True, grid=True, legend=False)
+    # устанавливаем формат подписей по оси ординат
     axes[0, 0].set(ylabel='Расход, м$^3$/с', title='В.Ангара')
     axes[0, 1].set(ylabel='', title='Баргузин')
     axes[1, 0].set(ylabel='Расход, м$^3$/с', title='Селенга')
     axes[1, 1].set(ylabel='', title='оз.Байкал')
+    # устанавливаем частоту и формат подписей дат
+    loc = mdates.DayLocator(interval=1)
+    fmt = mdates.DateFormatter('%d\n%b')
+    for ax in axes.reshape(-1):
+        ax.xaxis.set_major_locator(loc)
+        ax.xaxis.set_major_formatter(fmt)
     #plt.show()
     plt.savefig(sets.SHORT_RES + '/' + (prog['date'][0] + timedelta(days=10)).strftime("%Y%m%d") + '/' +
-                'x+10' + '.png', dpi=200)
+                'x+10' + '.png', dpi=200, bbox_inches='tight')
 
 
 # главный модуль
