@@ -11,7 +11,7 @@ $dt = Get-Date
 $dt = $dt.AddDays(0).ToString("yyyy-MM-dd")
 
 echo $dt
-logfile = $dt + ".log"
+$logfile = $dt + ".log"
 
 
 
