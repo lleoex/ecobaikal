@@ -7,6 +7,8 @@ import numpy as np
 import datetime
 import csv
 from datetime import date, timedelta
+import locale
+locale.setlocale(locale.LC_ALL, 'ru_RU.utf8')
 import time
 from calendar import monthrange, isleap
 # from jdcal import jd2gcal, jcal2jd
@@ -410,10 +412,22 @@ def readQFact(path):
 
 def graphShort(res):
     prog = readShort(res)
-    prog.drop('lag', axis=1).plot.line(x='date', subplots=[('angara', 'barguzin'), ('selenga', 'baikal')])
+    # таблица
+    prog['date'] = prog['date'].dt.date
+    prog.drop('lag', axis=1).to_excel(sets.SHORT_RES + '/' + (prog['date'][0] + timedelta(days=10)).strftime("%Y%m%d") +
+                                      '/' + 'x+10.xlsx', index=False)
+    # рисунок
+    axes = prog.drop('lag', axis=1).plot(x='date', style='.-', layout=(2, 2), subplots=True, figsize=(10, 10),
+                                       title = 'Прогноз притока в Иркутское вдхр. от ' +
+                                               prog['date'][0].strftime("%d.%m.%Y"), xlabel='Дата',
+                                       sharex=True, grid=True, legend=False)
+    axes[0, 0].set(ylabel='Расход, м$^3$/с', title='В.Ангара')
+    axes[0, 1].set(ylabel='', title='Баргузин')
+    axes[1, 0].set(ylabel='Расход, м$^3$/с', title='Селенга')
+    axes[1, 1].set(ylabel='', title='оз.Байкал')
     #plt.show()
-    plt.savefig(sets.SHORT_RES + '/' +(prog['date'][0]+ timedelta(days=10)).strftime("%Y%m%d") + '/x+10' + '.png',
-                dpi=100, bbox_inches='tight')
+    plt.savefig(sets.SHORT_RES + '/' + (prog['date'][0] + timedelta(days=10)).strftime("%Y%m%d") + '/' +
+                'x+10' + '.png', dpi=200)
 
 
 # главный модуль

@@ -357,7 +357,7 @@ def ecocycle(dates, lead, params):
             #     "%d.%m.%Y %H:%M:%S") + ' Отсутствует контрольная точка. Выполняется расчет')
             if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year, 5, 1).strftime("%Y%m%d") + '\\' + params['source_name']):
                 if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year - 1, date.month, 1).strftime("%Y%m%d") + '\\' + params['source_name']):
-                    model_start = datetime.date(2025, 1, 1)
+                    model_start = datetime.date(2016, 1, 1)
                 else:
                     model_start = datetime.date(date.year - 1, date.month, 1)
             else:
@@ -517,11 +517,11 @@ def ens_stat(path):
                             colLabels=['Средний\nпрогноз', '95%', 'Медиана', '5%'],
                             rowLabels=month_w.index, loc='center', bbox=[0, 0, 1, 1])
     q_tbl.auto_set_font_size(False)
-    q_tbl.set_fontsize(18)
+    q_tbl.set_fontsize(14)
     fig.suptitle("Прогноз притока в Иркутское вдхр. от " + df.index.min().strftime("%d.%m.%Y"), fontsize=15)
     fig.savefig(os.path.dirname(os.path.abspath(path)) + "//" + 'graph_' + df.index.min().strftime("%Y-%m-%d") + '.png',
                 dpi=100, bbox_inches='tight')
-    #plt.show()
+    plt.show()
 
     # гидрограф
     # fig = plt.figure(figsize=[16, 10])
