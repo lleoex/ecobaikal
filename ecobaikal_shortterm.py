@@ -107,6 +107,13 @@ def ecocycle(dates, lead, params):
     if params['dir_CT'] == params['dir_out']:
         print('Директории для сохранения начальных условий и результатов расчета совпадают. Пожалуйста, измените!')
         quit()
+
+    # меняем значения в basin.bas в зависимости от типа прогноза: 4 створа если краткосрочный, 1 если долгосрочный
+    with open(params['baspath'] + '/basin.bas', 'w') as bas:
+        bas.truncate()
+        bas.write('4 \n 1 2 3 4')
+        bas.close()
+
     # цикл по всем пришедшим датам
     for date in dates:
         if(type(date) == 'str'):
@@ -120,7 +127,7 @@ def ecocycle(dates, lead, params):
             # расчет КТ при ее отсутствии
             print('Отсутствует контрольная точка. Выполняется расчет')
             if not os.path.isfile(params['dir_CT'] + '\\' +
-                                  datetime.date(model_end.year, 5, 1).strftime("%Y%m%d") +
+                                  datetime.date(model_end.year, 4, 1).strftime("%Y%m%d") +
                                   '\\INPCURV.BAS'):
                 model_start = datetime.date(2022, 1, 1)
             else:

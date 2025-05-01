@@ -59,7 +59,7 @@ def ecoens(date_start, date_end, year_ens_start, year_ens_end, meteo_path, hydro
             kpt.write('0 1 1')
         kpt.close()
 
-    # меняем значения в kpoint.bas в зависимости от варианта расчета: "0" если ансамбль, "2" если диагноз
+    # меняем значения в basin.bas в зависимости от типа прогноза: 4 створа если краткосрочный, 1 если долгосрочный
     with open(baspath + '/basin.bas', 'w') as bas:
         bas.truncate()
         bas.write('1 \n 4 3 2 1')
@@ -357,7 +357,7 @@ def ecocycle(dates, lead, params):
             #     "%d.%m.%Y %H:%M:%S") + ' Отсутствует контрольная точка. Выполняется расчет')
             if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year, 5, 1).strftime("%Y%m%d") + '\\' + params['source_name']):
                 if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year - 1, date.month, 1).strftime("%Y%m%d") + '\\' + params['source_name']):
-                    model_start = datetime.date(2016, 1, 1)
+                    model_start = datetime.date(2025, 1, 1)
                 else:
                     model_start = datetime.date(date.year - 1, date.month, 1)
             else:
@@ -521,7 +521,7 @@ def ens_stat(path):
     fig.suptitle("Прогноз притока в Иркутское вдхр. от " + df.index.min().strftime("%d.%m.%Y"), fontsize=15)
     fig.savefig(os.path.dirname(os.path.abspath(path)) + "//" + 'graph_' + df.index.min().strftime("%Y-%m-%d") + '.png',
                 dpi=100, bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
     # гидрограф
     # fig = plt.figure(figsize=[16, 10])

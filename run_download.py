@@ -52,19 +52,20 @@ if __name__ == '__main__':
             eraProc(today)
         result = oper_tools.check_meteo(sets.ERA_BAS_DIR, today - timedelta(days=8))
     elif src == "GFS":
-        gfs_dir_fore=os.path.join(sets.GFS_BAS_DIR,'GFS/',today.strftime(format='%Y%m%d'))
-        gfs_dir_an = os.path.join(sets.GFS_BAS_DIR, 'GFS/')
-        haveGfsFore = oper_tools.check_meteo(gfs_dir_fore, today+timedelta(days=9))
-        haveGfsAn = oper_tools.check_meteo(gfs_dir_an, today)
-        haveGfs = haveGfsFore and haveGfsAn
-        if not haveGfs:
-            getGFS(today)
-            # сделать bas из tifов GFS
-            gfsProc(today)
-        haveGfsFore = oper_tools.check_meteo(gfs_dir_fore, today+timedelta(days=9))
-        haveGfsAn = oper_tools.check_meteo(gfs_dir_an, today)
-        haveGfs = haveGfsFore and haveGfsAn
-        result = haveGfs
+        while not result:
+            gfs_dir_fore=os.path.join(sets.GFS_BAS_DIR,'GFS/',today.strftime(format='%Y%m%d'))
+            gfs_dir_an = os.path.join(sets.GFS_BAS_DIR, 'GFS/')
+            haveGfsFore = oper_tools.check_meteo(gfs_dir_fore, today+timedelta(days=9))
+            haveGfsAn = oper_tools.check_meteo(gfs_dir_an, today)
+            haveGfs = haveGfsFore and haveGfsAn
+            if not haveGfs:
+                getGFS(today)
+                # сделать bas из tifов GFS
+                gfsProc(today)
+            haveGfsFore = oper_tools.check_meteo(gfs_dir_fore, today+timedelta(days=9))
+            haveGfsAn = oper_tools.check_meteo(gfs_dir_an, today)
+            haveGfs = haveGfsFore and haveGfsAn
+            result = haveGfs
     else:
         print(f'nothing to do with source={src}')
 

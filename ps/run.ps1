@@ -23,5 +23,5 @@ $py_dir = "D:\ecobaikal\runpy\ecobaikal"
 
 & python $py_dir\run_download.py --date_today=$dt --source=ERA >> $logfile 2>&1
 
-& python $py_dir\run_ecomag.py --date_today=$dt > $logfile 2>&1
+& python $py_dir\run_ecomag.py --date_today=$dt >> $logfile 2>&1
 
