@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 import base64
 import settings
+import locale
 
 
 def clean(text)->str:
@@ -68,13 +69,17 @@ def receivemail() -> (datetime, str):
                                         fname_b64 = line.split('"')[1]
                                         if isinstance(fname_b64, bytes) or fname_b64.startswith('='):
                                             dstr = base64.b64decode(fname_b64.split('?')[-2])
-                                            filename = dstr.decode('windows-1251')
+                                            filename = dstr.decode(encoding)
                                         else:
                                             filename = fname_b64
                                         print(filename)
                                     elif 'modification-date' in line:
                                         dt_b64 = line.split('"')[1]
+                                        loc = locale.getlocale()[0]
+
+                                        locale.setlocale(locale.LC_ALL, 'en_US')
                                         dt = datetime.strptime(dt_b64,'%a, %d %b %Y %H:%M:%S GMT')
+                                        locale.setlocale(locale.LC_ALL, loc)
                                         print(dt_b64)
                                 if filename:
                                     sets = settings.Settings()
