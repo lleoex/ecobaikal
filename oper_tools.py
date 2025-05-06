@@ -322,7 +322,7 @@ def makeHydr(path):
     :param path:
     :return:
     '''
-    df = pd.read_excel(path, names=['date','post','lev','q'])
+    df = pd.read_excel(path, names=['date','post','lev','q'], nrows=5)
 
     year = df['date'].dt.date.min().year
     riv = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
