@@ -20,8 +20,8 @@ class Settings:
         self.rivers = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
         self.emails_d = ['gonchukovlv@yandex.ru', 'gonchukov-lv@ferhri.ru', 'moreido@mail.ru'] # debug
         self.emails_p = ['gonchukovlv@yandex.ru', 'moreido@mail.ru', 'envision@enplus.ru', 
-				'karmazinenkoEI@enplus-generation.ru', 'dl@irmeteo.ru', 
-				'voda@irmeteo.ru', 'gidro.81@mail.ru', 
+			'kalugin-andrei@mail.ru', 'karmazinenkoEI@enplus-generation.ru'		, 
+			'dl@irmeteo.ru', 'voda@irmeteo.ru', 'gidro.81@mail.ru', 
 				'gmo-bcgms@mail.ru'] # production
         if not os.path.isdir(self.ROOT_DIR):
             self.mkdirs()
