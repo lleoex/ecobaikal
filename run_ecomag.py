@@ -3,7 +3,7 @@ import datetime
 import os
 
 import oper_tools
-from ecobaikal_longterm import ens_stat, ecocycle as ec_lt
+from ecobaikal_longterm import ecocycle as ec_lt
 from ecobaikal_shortterm import read_params, ecocycle as ec_st
 
 from settings import Settings
@@ -26,9 +26,9 @@ if __name__ == '__main__':
     print(today)
 
     os.chdir(sets.MODEL_DIR)
-    params = read_params(os.path.join(sets.MODEL_DIR,'baikal_x+10.txt'))
+    params = read_params(os.path.join(sets.MODEL_DIR, 'baikal_x+10.txt'))
     for k in params:
-        params[k] = params[k].replace("d:",sets.ROOT_DIR)
+        params[k] = params[k].replace("d:", sets.ROOT_DIR)
     ec_st([today], 10, params)
 
     oper_tools.graphShort(os.path.join(sets.SHORT_RES, (today + datetime.timedelta(days=10)).strftime('%Y%m%d'), sets.SOURCE_NAME))
@@ -45,15 +45,18 @@ if __name__ == '__main__':
         # долгосрочный прогноз
         params = read_params(os.path.join(sets.ROOT_DIR, sets.MODEL_DIR, 'baikal_x+60.txt'))
         for k in params:
-            params[k] = params[k].replace("d:",sets.ROOT_DIR)
+            params[k] = params[k].replace("d:", sets.ROOT_DIR)
         ec_lt([today + datetime.timedelta(days=10)], 2, params)
+
+        # обработка ансамбля для статистики и картинок
         ens = sets.LONG_RES + '/' + str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '/' + \
                str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '_ens.txt'
+        oper_tools.ens_stat(ens)
 
-        ens_stat(ens)
-        #"C:\EcoBaikal\Archive\003\ENS\20250601\graph_2025-04-26.png"
+        # добавление файла для отправки
         lfname = sets.LONG_RES + '/' + str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '/' + \
               'graph_' + (today + datetime.timedelta(days=10)).strftime('%Y-%m-%d') + '.png'
         files_to_send.append(lfname)
 
-    sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', files_to_send)
+    # отправка почты
+    # sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', files_to_send)

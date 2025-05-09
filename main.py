@@ -77,17 +77,17 @@ if __name__ == '__main__':
 #     ec_st([today], 10, params)
 # графика Х+10
 
-    oper_tools.graphShort('d:/EcoBaikal/Archive/002/RES/20220511/QCURVBaikal                        .txt')
+    # oper_tools.graphShort('d:/EcoBaikal/Archive/002/RES/20220511/QCURVBaikal                        .txt')
 # рассылка Х+10
 
 
 # долгосрочный прогноз
 #     params = read_params(os.path.join(sets.ROOT_DIR, sets.MODEL_DIR, 'baikal_x+60.txt'))
 #     ec_lt([today + datetime.timedelta(days=10)], 2, params)
-#     ens = sets.LONG_RES + '/' + str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '/' + \
-#           str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '_ens.txt'
+    ens = sets.LONG_RES + '/' + str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '/' + \
+          str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '_ens.txt'
 #
-#     ens_stat(ens)
+    ens_stat(ens)
 
 
 

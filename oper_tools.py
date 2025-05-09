@@ -296,9 +296,9 @@ def short_corr(date, res, pathCoeff, pathFactQ):
     df_fact = pd.DataFrame()
     riv = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
     for r, name in riv.items():
-        #path = 'c:/EcoBaikal/Data/Hydro/Baikal/' + r + '/hydr' + str(date.year)[2:4] + '.bas'
+        # print(name)
         path = os.path.join(sets.EMG_HYDRO_DIR,r,'hydr' + str(date.year)[2:4] + '.bas')
-        df = pd.read_csv(path, sep='\t', skiprows=3, names=['n', 'date', 'q'], usecols=[1, 2])
+        df = pd.read_csv(path, sep='\t+', skiprows=3, names=['n', 'date', 'q'], usecols=['date', 'q'], engine='python')
         df['riv'] = name
         df_fact = pd.concat([df_fact, df], axis=0)
         # print(df_fact.head())
@@ -435,6 +435,138 @@ def graphShort(res):
     #plt.show()
     plt.savefig(sets.SHORT_RES + '/' + (prog['date'][0] + timedelta(days=10)).strftime("%Y%m%d") + '/' +
                 'x+10' + '.png', dpi=200, bbox_inches='tight')
+
+
+def dec_quantile(df):
+    '''
+
+    :param df:
+    :return:
+    '''
+    q10 = round(np.percentile(df.mean(axis=1), 10), 2)
+    q25 = round(np.percentile(df.mean(axis=1), 25), 2)
+    q75 = round(np.percentile(df.mean(axis=1), 75), 2)
+    q90 = round(np.percentile(df.mean(axis=1), 90), 2)
+    return [q10, q25, q75, q90]
+
+
+def ens_stat(path):
+    '''
+
+    :param path:
+    :return:
+    '''
+    df = pd.read_csv(path, header=0)
+    del df['Unnamed: 0']
+    df.index = df['date']
+    df.index = pd.to_datetime(df.index)
+    del df['date']
+    del df['fact']
+    df.drop(df.tail(1).index, inplace=True)
+    dfw = df * 86400 / 1000000000
+
+    # коррекция по краткосрочному прогнозу
+    path = os.path.join(sets.SHORT_RES + sets.SOURCE_NAME)
+    # ct = pd.read_csv()
+
+
+    month_q = df.drop('Qmean', axis=1).resample('ME').mean().transpose().describe(
+        percentiles=[.05, .5, .95]).transpose()
+    month_w = dfw.drop('Qmean', axis=1).resample('ME').sum().transpose().describe(
+        percentiles=[.05, .5, .95]).transpose()
+    qmax_date = df.drop('Qmean', axis=1).idxmax()
+    qmax_date = qmax_date.describe()
+    del month_w['count']
+    del month_q['count']
+
+    month_w.index = month_w.index.to_period('M')
+    month_w['period'] = month_w.index.strftime("%B")
+
+    # quarter_w['period'] = quarter_w.index.strftime("%q") + ' квартал '
+    month_q.index = month_q.index.to_period('M')
+    month_q['period'] = month_q.index.strftime("%B")
+
+    month_w['var'] = 'W'
+    month_q['var'] = 'Q'
+
+    f = os.path.dirname(os.path.abspath(path)) + '//' + 'stats_' + df.index.min().strftime("%Y-%m-%d") + '.csv'
+    with open(f, 'w+') as filer:
+        filer.write('Объем притока км3 \n')
+        filer.close()
+    month_w.to_csv(f, mode='a', header=True, float_format='%.3f', encoding='windows-1251')
+    with open(f, "a+") as filer:
+        filer.write('Средний расход воды притока м3/сек \n')
+        filer.close()
+    month_q.to_csv(f, mode='a', header=True, float_format='%.3f', encoding='windows-1251')
+    with open(f, "a+") as filer:
+        filer.write("\n")
+        filer.write("Наиболее вероятная дата пика: " + qmax_date['mean'].strftime("%d.%m.%Y") + "\n")
+        filer.write("Ранняя дата пика: " + qmax_date['min'].strftime("%d.%m.%Y") + "\n")
+        filer.write("Поздняя дата пика: " + qmax_date['max'].strftime("%d.%m.%Y") + "\n")
+        filer.close()
+
+    pd.concat([month_w, month_q])
+    # p = os.path.dirname(os.path.abspath(path)) + '//' + 'stats.pkl'
+    # month_w.to_pickle(p)
+
+    # графика
+    fig, axs = plt.subplots(2, 1, figsize=(15, 15))
+    # month_w.plot(ax=axs[0, 0], y='mean', kind='bar', rot=0,
+    #              yerr=[month_w['mean']-month_w['5%'], month_w['95%']-month_w['mean']], capsize=6)
+    # # axs[0, 0].legend(['Средний прогноз'])
+    # axs[0, 0].legend(['Mean'])
+    # axs[0, 0].set_xlabel('')
+    # # axs[0, 0].set_ylabel(r'Объем притока, км$^3$')
+    # axs[0, 0].set_ylabel('Inflow volume, km$^3$')
+
+    month_q.plot(ax=axs[0], y='mean', kind='bar', rot=0, color='tab:blue',
+                 yerr=[month_q['mean'] - month_q['5%'], month_q['95%'] - month_q['mean']],
+                 error_kw=dict(ecolor='black', lw=2, capsize=5, capthick=2))
+    axs[0].legend([r'Средний прогноз'])
+    axs[0].set_ylabel(r'Приток, м$^3$/с')
+    axs[0].set_xlabel(r'Месяц')
+    axs[1].axis('off')
+    axs[1].axis('off')
+
+    # w_tbl = axs[1, 0].table(cellText=month_w[['mean', '5%', '50%', '95%']].round(2).values,
+    #                         colLabels=['Средний\nпрогноз', '95%', 'Медиана', '5%'],
+    #                         rowLabels=month_w.index, loc='center', bbox=[0,0,1,1])
+    # w_tbl.auto_set_font_size(False)
+    # w_tbl.set_fontsize(14)
+
+    q_tbl = axs[1].table(cellText=month_q[['mean', '5%', '50%', '95%']].astype(int).values,
+                         colLabels=['Средний\nпрогноз', '95%', 'Медиана', '5%'],
+                         rowLabels=month_w.index, loc='center', bbox=[0, 0, 1, 1])
+    q_tbl.auto_set_font_size(False)
+    q_tbl.set_fontsize(14)
+    fig.suptitle("Прогноз притока в Иркутское вдхр. от " + df.index.min().strftime("%d.%m.%Y"), fontsize=15)
+    fig.savefig(os.path.dirname(os.path.abspath(path)) + "//" + 'graph_' + df.index.min().strftime("%Y-%m-%d") + '.png',
+                dpi=100, bbox_inches='tight')
+    # plt.show()
+
+    # гидрограф
+    # fig = plt.figure(figsize=[16, 10])
+    # ax = fig.add_subplot()
+    # df.drop('Qmean', axis=1).plot(ax=ax, legend=False, grid=True)
+    # df['Qmean'].plot(ax=ax, color = 'red', lw=4)
+    # box = ax.get_position()
+    # ax.set_position([box.x0, box.y0 + box.height * 0.1,
+    #                  box.width, box.height * 0.9])
+    # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+    #       fancybox=True, shadow=True, ncol=12)
+    #
+    # # линии для пиков
+    # ax.axvline(qmax_date['mean'], linestyle='--', color='blue')
+    # ax.text(qmax_date['mean'], month_q['max'].max(), "Наиболее вероятная дата пика: \n" + qmax_date['mean'].strftime("%d.%m.%Y"),
+    #         rotation=90, verticalalignment='top', ma='right', bbox=dict(facecolor='white', alpha=0.7, lw=0))
+    # ax.axvline(qmax_date['min'], linestyle='--', color='blue')
+    # ax.text(qmax_date['min'], month_q['max'].max(),
+    #         "Ранняя дата пика: \n" + qmax_date['min'].strftime("%d.%m.%Y"),
+    #         rotation=90, verticalalignment='top', ma='right', bbox=dict(facecolor='white', alpha=0.7, lw=0))
+    # ax.axvline(qmax_date['max'], linestyle='--', color='blue')
+    # ax.text(qmax_date['max'], month_q['max'].max(),
+    #         "Поздняя дата пика: \n" + qmax_date['max'].strftime("%d.%m.%Y"),
+    #         rotation=90, verticalalignment='top', ma='right', bbox=dict(facecolor='white', alpha=0.7, lw=0))
 
 
 # главный модуль
