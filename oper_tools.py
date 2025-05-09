@@ -450,6 +450,35 @@ def dec_quantile(df):
     return [q10, q25, q75, q90]
 
 
+def long_corr(df, type):
+    '''
+
+    :param df:
+    :param type:
+    :return:
+    '''
+    # df.plot(kind='line')
+    df = df.drop('Qmean', axis=1)
+    df['arg'] = (len(df) - df.reset_index().index.values) / len(df)
+    df['date'] = df.index
+    df = df.melt(id_vars=['date', 'arg'], var_name='scenario', value_name='q')
+    path = os.path.join(sets.SHORT_RES, df['date'].min().strftime('%Y%m%d'),
+                        sets.SOURCE_NAME)
+    ct = readShort(path)
+    df = df.merge(ct[['date', 'baikal']], on='date', how='outer')
+    df['qcor'] = df['q'].case_when(caselist=[
+        (df['date'] <= ct['date'].max(), df['baikal']),
+        (df['date'] > ct['date'].max(),
+         df['q'] - df['arg'] * (df['q'] - df['baikal'].loc[df['date'] == ct['date'].max()].values))
+    ])
+    df.loc[df['scenario'].isnull(), 'scenario'] = 'Qmean'
+    df = df.pivot(index='date', columns='scenario', values='qcor')
+    df['Qmean'] = df.mean(axis=1)
+    # df.plot(kind='line')
+    print(df.head())
+    return(df)
+
+
 def ens_stat(path):
     '''
 
@@ -466,9 +495,7 @@ def ens_stat(path):
     dfw = df * 86400 / 1000000000
 
     # коррекция по краткосрочному прогнозу
-    path = os.path.join(sets.SHORT_RES + sets.SOURCE_NAME)
-    # ct = pd.read_csv()
-
+    df = long_corr(df, type='1')
 
     month_q = df.drop('Qmean', axis=1).resample('ME').mean().transpose().describe(
         percentiles=[.05, .5, .95]).transpose()
@@ -571,9 +598,10 @@ def ens_stat(path):
 
 # главный модуль
 if __name__ == "__main__":
-    date = datetime.date(2022, 4, 14) + datetime.timedelta(days=10)
-    pathCoeff = 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas'
-    pathFactQ = 'd:/Data/Hydro/buryat_q_2022.xlsx'
+    # date = datetime.date(2022, 4, 14) + datetime.timedelta(days=10)
+    # pathCoeff = 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas'
+    # pathFactQ = 'd:/Data/Hydro/buryat_q_2022.xlsx'
     # makeHydr('d:/Data/Hydro/buryat_q_2022.xlsx')
     # short_corr(date, 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas', pathCoeff, pathFactQ)
     # readQFact('d:/YandexDisk/ИВПРАН/En+/отчет2025_2/1_шаблон_расчетный_среднесуточный.xlsx')
+    ens_stat(r'd:\EcoBaikal\Archive\003\ENS\20250601\20250601_ens.txt')
