@@ -195,7 +195,7 @@ def check_meteo(path, date_start):
                 nulldata = df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values == len(ind) - 1
                 non_nulldata = len(ind) - 1 - df[df.index == date_start.strftime('%Y-%m-%d')].isnull().sum(axis=1).values
                 if nulldata:
-                    print('Отсутствуют данные по ' + v + ' за дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
+                    print('данные есть, но с пропусками по ' + v + ' за дату выпуска прогноза: ' + date_start.strftime('%d.%m.%Y') + '.')
                     flag.append(False)
                 else:
                     print('Данные по ' + v + ' есть за дату выпуска прогноза с ' + str(non_nulldata).strip("[]") + ' станций.')
