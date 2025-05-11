@@ -88,12 +88,14 @@ def getGFS(date):
     for d in dr: # Проходим по датам периода
         print(d)
         for i in range(len(day_list)): # далее по порядковым номерам (индексам) сроков прогноза
-            gfs = ee.ImageCollection(collection).select(bandTemp).filterDate(str(d)[0:10]).filterBounds(geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).mean()
+
             # Выбираем из коллекции нужную заблаговременность, в случае с температурой осредняем, получаем прогноз средней температуры за сутки
             tifname = path + '/' + str(d)[0:10] + '+' + str(i) + '.tif'
             if os.path.exists(tifname):
                 print(f'{tifname} already exixsts. nothing to download')
             else:
+                gfs = ee.ImageCollection(collection).select(bandTemp).filterDate(str(d)[0:10]).filterBounds(
+                    geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).mean()
                 geemap.ee_export_image(gfs, path + '/' + str(d)[0:10] + '+' + str(i) + '.tif', region = geom) # Экспортируем растр прогноза в текущий день и на данный срок
 
     bandPrec = 'total_precipitation_surface' # Осадки в кг/кв.м, что в случае с водой соответствует мм
