@@ -104,9 +104,13 @@ def getGFS(date):
         os.makedirs(path)
     for d in dr:
         for i in range(len(day_list)):
-            gfs = ee.ImageCollection(collection).select(bandPrec).filterDate(str(d)[0:10]).filterBounds(geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).sum()
-            # в случае с осадками суммируем
-            geemap.ee_export_image(gfs, path + '/' + str(d)[0:10] + '+' + str(i) + '.tif', region = geom)
+            tifname = path + '/' + str(d)[0:10] + '+' + str(i) + '.tif'
+            if os.path.exists(tifname):
+                print(f'{tifname} already exixsts. nothing to download')
+            else:
+                gfs = ee.ImageCollection(collection).select(bandPrec).filterDate(str(d)[0:10]).filterBounds(geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).sum()
+                geemap.ee_export_image(gfs, path + '/' + str(d)[0:10] + '+' + str(i) + '.tif', region=geom)
+
 
 
 if __name__ == "__main__":
