@@ -164,7 +164,7 @@ def ecocycle(dates, lead, params):
         # коррекция и запись sbrosXX.bas
         short_corr(date=date, res=params['dir_out'] + '/' + model_end.strftime("%Y%m%d") + '/' + params['source_name'],
                    pathCoeff=os.path.join(sets.MODEL_BAS_DIR, 'X10_corr.bas'),
-                   pathFactQ=os.path.join(sets.HYDRO_FACT_DIR,'buryat_q_' + str(date.year) + '.xlsx')
+                   pathFactQ=os.path.join(sets.HYDRO_FACT_DIR, 'buryat_q_' + str(date.year) + '.xlsx')
                    )
         # запуск прогноза с заливкой sbrosXX.bas
         # меняем значения в sbros.bas в зависимости от варианта расчета: "0" если прогноз створам, "4" если в Байкал

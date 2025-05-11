@@ -5,17 +5,14 @@ import matplotlib.pyplot as plt
 import os
 import subprocess
 import pandas as pd
-from datetime import timedelta
-from dateutil import relativedelta
 import numpy as np
 import argparse
-import logging
-from logging.handlers import RotatingFileHandler
-# from oper_tools import check_meteo
-
+from settings import Settings
+sets = Settings()
 
 # однократный запуск ECOMAG diagnosis
-def ecoens(date_start, date_end, year_ens_start, year_ens_end, meteo_path, hydro_path, baspath, exepath, exename, source_name, ens_flag, dir_CT, dir_out):
+def ecoens(date_start, date_end, year_ens_start, year_ens_end, meteo_path, hydro_path, baspath, exepath, exename,
+           source_name, ens_flag, dir_CT, dir_out):
     """
     Запуск расчета по модели ECOMAG
 
@@ -92,7 +89,7 @@ def ecoens(date_start, date_end, year_ens_start, year_ens_end, meteo_path, hydro
         print(ens_start.strftime("%d.%m.%Y") + " " + ens_end.strftime("%d.%m.%Y") + '\n')
 
         # пишем в atime.bas новые даты, дни года и продолжительность расчета
-        atime = open(baspath + '\\' +'atime.bas', 'w')
+        atime = open(baspath + '\\' + 'atime.bas', 'w')
         atime.truncate()
         atime.write(ens_start.strftime("%d.%m.%Y") + " " + ens_end.strftime("%d.%m.%Y") + '\n')
         atime.write(str(ens_start.timetuple().tm_yday) + " " + str(abs(ens_end - ens_start).days))
@@ -136,7 +133,8 @@ def ecoens(date_start, date_end, year_ens_start, year_ens_end, meteo_path, hydro
 
 
 # REV-ESP для ECOMAG
-def eco_revesp(date_start, date_end, year_ens_start, year_ens_end, meteo_path, baspath, exepath, exename, source_name, ens_flag, dir_CT, dir_out):
+def eco_revesp(date_start, date_end, year_ens_start, year_ens_end, meteo_path, baspath, exepath, exename, source_name,
+               ens_flag, dir_CT, dir_out):
     """
     Запуск расчета по модели ECOMAG с изменяемыми контрольными точками и неизменной метеорологией
 
@@ -180,7 +178,6 @@ def eco_revesp(date_start, date_end, year_ens_start, year_ens_end, meteo_path, b
             kpt.write('0 1 1')
         kpt.close()
 
-
     ens = pd.DataFrame()
     ens['date'] = pd.date_range(date_start, date_end)
     # print(ens['date'])
@@ -192,7 +189,8 @@ def eco_revesp(date_start, date_end, year_ens_start, year_ens_end, meteo_path, b
             # метеорология
             lines[3] = meteo_path
             # контрольная точка - каждый раз разная
-            lines[6] = dir_CT + '\\' + datetime.datetime(year=i, month=date_start.month, day=date_start.day).strftime("%Y%m%d")
+            lines[6] = dir_CT + '\\' + datetime.datetime(year=i, month=date_start.month, day=date_start.day).strftime(
+                "%Y%m%d")
             print(lines[6])
             # выходной каталог
             lines[5] = dir_out + '\\' + date_end.strftime("%Y%m%d")
@@ -207,7 +205,7 @@ def eco_revesp(date_start, date_end, year_ens_start, year_ens_end, meteo_path, b
         print(ens_start.strftime("%d.%m.%Y") + " " + ens_end.strftime("%d.%m.%Y") + '\n')
 
         # пишем в atime.bas новые даты, дни года и продолжительность расчета
-        atime = open(baspath + '\\' +'atime.bas', 'w')
+        atime = open(baspath + '\\' + 'atime.bas', 'w')
         atime.truncate()
         atime.write(date_start.strftime("%d.%m.%Y") + " " + date_end.strftime("%d.%m.%Y") + '\n')
         atime.write(str(date_start.timetuple().tm_yday) + " " + str(abs(date_end - date_start).days))
@@ -277,7 +275,7 @@ def ecorun(date_start, date_end, meteo_path, hydro_path, baspath, exepath, exena
     # пишем в atime.bas новые даты, дни года и продолжительность расчета
     # atime = open(r'd:\EcoVolga\Basin\Chebok1\Bas\atime.bas', 'w')
     # atime = open(r'd:\ecopechora\Basin\Dvina\bas\atime.bas', 'w')
-    atime = open(baspath + '\\' +'atime.bas', 'w')
+    atime = open(baspath + '\\' + 'atime.bas', 'w')
     atime.truncate()
     atime.write(date_start.strftime("%d.%m.%Y") + " " + date_end.strftime("%d.%m.%Y") + '\n')
     atime.write(str(date_start.timetuple().tm_yday) + " " + str(abs(date_end - date_start).days))
@@ -295,7 +293,7 @@ def ecorun(date_start, date_end, meteo_path, hydro_path, baspath, exepath, exena
     # читаем из pathen.bas старые настройки и меняем их по очереди
     with open(exepath + '\pathen.bas', 'r+') as pathen:
         lines = pathen.read().splitlines()
-       # print(lines)
+        # print(lines)
         lines[0] = baspath
         # lines[1] = baspath.replace("Bas", "Graf")
         # lines[2] = baspath.replace("e\\Bas", "e\\Result", )
@@ -323,6 +321,7 @@ def ecorun(date_start, date_end, meteo_path, hydro_path, baspath, exepath, exena
             # app_log.error(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + err.decode("utf-8"))
 
         print(result)
+
 
 def ecocycle(dates, lead, params):
     """
@@ -355,8 +354,11 @@ def ecocycle(dates, lead, params):
                 kpt.close()
             # app_log.error(datetime.datetime.now().strftime(
             #     "%d.%m.%Y %H:%M:%S") + ' Отсутствует контрольная точка. Выполняется расчет')
-            if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year, 5, 1).strftime("%Y%m%d") + '\\' + params['source_name']):
-                if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year - 1, date.month, 1).strftime("%Y%m%d") + '\\' + params['source_name']):
+            if not os.path.isfile(
+                    params['dir_CT'] + '\\' + datetime.date(date.year, 5, 1).strftime("%Y%m%d") + '\\' + params[
+                        'source_name']):
+                if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year - 1, date.month, 1).strftime(
+                        "%Y%m%d") + '\\' + params['source_name']):
                     model_start = datetime.date(2025, 1, 1)
                 else:
                     model_start = datetime.date(date.year - 1, date.month, 1)
@@ -389,13 +391,10 @@ def ecocycle(dates, lead, params):
         # else:
         #     model_end = datetime.date(model_start.year + 1, abs(model_start.month + lead.get('months') - 12), 1)
 
-
         print(model_start, model_end)
         # app_log.error(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + ' Старт прогноза' + ", начало: " +
         #               model_start.strftime("%d.%m.%Y") + ", окончание: " + model_end.strftime("%d.%m.%Y"))
         ecoens(model_start, model_end, **params)
-
-
 
 
 def read_params(param_path):
@@ -429,123 +428,6 @@ def datelist(date_start, date_end, freq_type, freq):
     return dates_arr
 
 
-def dec_quantile(df):
-    q10 = round(np.percentile(df.mean(axis=1), 10), 2)
-    q25 = round(np.percentile(df.mean(axis=1), 25), 2)
-    q75 = round(np.percentile(df.mean(axis=1), 75), 2)
-    q90 = round(np.percentile(df.mean(axis=1), 90), 2)
-    return [q10, q25, q75, q90]
-
-
-def ens_stat(path):
-
-    df = pd.read_csv(path, header=0)
-    del df['Unnamed: 0']
-    df.index = df['date']
-    df.index = pd.to_datetime(df.index)
-    del df['date']
-    del df['fact']
-    df.drop(df.tail(1).index, inplace=True)
-    dfw = df * 86400 / 1000000000
-
-
-
-    month_q = df.drop('Qmean', axis=1).resample('ME').mean().transpose().describe(percentiles=[.05, .5, .95]).transpose()
-    month_w = dfw.drop('Qmean', axis=1).resample('ME').sum().transpose().describe(percentiles=[.05, .5, .95]).transpose()
-    qmax_date = df.drop('Qmean', axis=1).idxmax()
-    qmax_date = qmax_date.describe()
-    del month_w['count']
-    del month_q['count']
-
-
-    month_w.index = month_w.index.to_period('M')
-    month_w['period'] = month_w.index.strftime("%B")
-
-    # quarter_w['period'] = quarter_w.index.strftime("%q") + ' квартал '
-    month_q.index = month_q.index.to_period('M')
-    month_q['period'] = month_q.index.strftime("%B")
-
-    month_w['var'] = 'W'
-    month_q['var'] = 'Q'
-
-    f = os.path.dirname(os.path.abspath(path)) + '//' + 'stats_' + df.index.min().strftime("%Y-%m-%d") + '.csv'
-    with open(f, 'w+') as filer:
-        filer.write('Объем притока км3 \n')
-        filer.close()
-    month_w.to_csv(f, mode='a', header=True,  float_format='%.3f', encoding='windows-1251')
-    with open(f, "a+") as filer:
-        filer.write('Средний расход воды притока м3/сек \n')
-        filer.close()
-    month_q.to_csv(f, mode='a', header=True,  float_format='%.3f', encoding='windows-1251')
-    with open(f, "a+") as filer:
-        filer.write("\n")
-        filer.write("Наиболее вероятная дата пика: " + qmax_date['mean'].strftime("%d.%m.%Y") + "\n")
-        filer.write("Ранняя дата пика: " + qmax_date['min'].strftime("%d.%m.%Y") + "\n")
-        filer.write("Поздняя дата пика: " + qmax_date['max'].strftime("%d.%m.%Y") + "\n")
-        filer.close()
-
-    pd.concat([month_w, month_q])
-    # p = os.path.dirname(os.path.abspath(path)) + '//' + 'stats.pkl'
-    # month_w.to_pickle(p)
-
-    #графика
-    fig, axs = plt.subplots(2, 1, figsize=(15, 15))
-    # month_w.plot(ax=axs[0, 0], y='mean', kind='bar', rot=0,
-    #              yerr=[month_w['mean']-month_w['5%'], month_w['95%']-month_w['mean']], capsize=6)
-    # # axs[0, 0].legend(['Средний прогноз'])
-    # axs[0, 0].legend(['Mean'])
-    # axs[0, 0].set_xlabel('')
-    # # axs[0, 0].set_ylabel(r'Объем притока, км$^3$')
-    # axs[0, 0].set_ylabel('Inflow volume, km$^3$')
-
-    month_q.plot(ax=axs[0], y='mean', kind='bar', rot=0, color='tab:blue',
-                 yerr=[month_q['mean']-month_q['5%'], month_q['95%']-month_q['mean']],
-                 error_kw=dict(ecolor='black', lw=2, capsize=5, capthick=2))
-    axs[0].legend([r'Средний прогноз'])
-    axs[0].set_ylabel(r'Приток, м$^3$/с')
-    axs[0].set_xlabel(r'Месяц')
-    axs[1].axis('off')
-    axs[1].axis('off')
-
-    # w_tbl = axs[1, 0].table(cellText=month_w[['mean', '5%', '50%', '95%']].round(2).values,
-    #                         colLabels=['Средний\nпрогноз', '95%', 'Медиана', '5%'],
-    #                         rowLabels=month_w.index, loc='center', bbox=[0,0,1,1])
-    # w_tbl.auto_set_font_size(False)
-    # w_tbl.set_fontsize(14)
-
-    q_tbl = axs[1].table(cellText=month_q[['mean', '5%', '50%', '95%']].astype(int).values,
-                            colLabels=['Средний\nпрогноз', '95%', 'Медиана', '5%'],
-                            rowLabels=month_w.index, loc='center', bbox=[0, 0, 1, 1])
-    q_tbl.auto_set_font_size(False)
-    q_tbl.set_fontsize(14)
-    fig.suptitle("Прогноз притока в Иркутское вдхр. от " + df.index.min().strftime("%d.%m.%Y"), fontsize=15)
-    fig.savefig(os.path.dirname(os.path.abspath(path)) + "//" + 'graph_' + df.index.min().strftime("%Y-%m-%d") + '.png',
-                dpi=100, bbox_inches='tight')
-    # plt.show()
-
-    # гидрограф
-    # fig = plt.figure(figsize=[16, 10])
-    # ax = fig.add_subplot()
-    # df.drop('Qmean', axis=1).plot(ax=ax, legend=False, grid=True)
-    # df['Qmean'].plot(ax=ax, color = 'red', lw=4)
-    # box = ax.get_position()
-    # ax.set_position([box.x0, box.y0 + box.height * 0.1,
-    #                  box.width, box.height * 0.9])
-    # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-    #       fancybox=True, shadow=True, ncol=12)
-    #
-    # # линии для пиков
-    # ax.axvline(qmax_date['mean'], linestyle='--', color='blue')
-    # ax.text(qmax_date['mean'], month_q['max'].max(), "Наиболее вероятная дата пика: \n" + qmax_date['mean'].strftime("%d.%m.%Y"),
-    #         rotation=90, verticalalignment='top', ma='right', bbox=dict(facecolor='white', alpha=0.7, lw=0))
-    # ax.axvline(qmax_date['min'], linestyle='--', color='blue')
-    # ax.text(qmax_date['min'], month_q['max'].max(),
-    #         "Ранняя дата пика: \n" + qmax_date['min'].strftime("%d.%m.%Y"),
-    #         rotation=90, verticalalignment='top', ma='right', bbox=dict(facecolor='white', alpha=0.7, lw=0))
-    # ax.axvline(qmax_date['max'], linestyle='--', color='blue')
-    # ax.text(qmax_date['max'], month_q['max'].max(),
-    #         "Поздняя дата пика: \n" + qmax_date['max'].strftime("%d.%m.%Y"),
-    #         rotation=90, verticalalignment='top', ma='right', bbox=dict(facecolor='white', alpha=0.7, lw=0))
 
 
 # главный модуль
@@ -555,14 +437,17 @@ if __name__ == "__main__":
     parser.add_argument('--date_start', type=str, nargs='?', help='Дата начала расчета гггг-мм-дд', required=True)
     parser.add_argument('--date_end', type=str, nargs='?', help='Дата окончания расчета гггг-мм-дд')
     parser.add_argument('--single', action='store_true', help='Одиночный ансамблевый прогноз')
-    parser.add_argument('--freq_type', type=str, help='Частота прогноза - суточный days, месячный months', default='months')
+    parser.add_argument('--freq_type', type=str, help='Частота прогноза - суточный days, месячный months',
+                        default='months')
     parser.add_argument('--freq', type=str, nargs='?', help='Частота прогноза - число (При days: 1 - ежедневный, '
-                                                '10 - ежедекадный, при months: 1 - ежемесячный', default='1')
+                                                            '10 - ежедекадный, при months: 1 - ежемесячный',
+                        default='1')
     parser.add_argument('--lead_type', type=str, default='months', nargs='?',
                         help='Шаг заблаговременности: days или months')
     parser.add_argument('--lead', type=int, default=1, choices=range(1, 13), nargs='?',
                         help='Величина заблаговременности')
-    parser.add_argument('--params', type=str, nargs='?', required=True, help='Полный путь до файла с параметрами расчета')
+    parser.add_argument('--params', type=str, nargs='?', required=True,
+                        help='Полный путь до файла с параметрами расчета')
     parser.add_argument('--log', type=str, default='ecorun.log', help='Файл для записи лога ошибок выполнения скрипта')
     args = parser.parse_args()
 
@@ -576,7 +461,7 @@ if __name__ == "__main__":
 
     if args.single == False:
         # dates = datelist(args.date_start, args.date_end, args.freq_type, args.freq)
-    # костыль для проверки бесшовности
+        # костыль для проверки бесшовности
         dates = ['2017-05-11', '2017-06-11', '2017-07-11', '2017-08-11', '2017-09-11', '2017-10-11',
                  '2018-05-11', '2018-06-11', '2018-07-11', '2018-08-11', '2018-09-11', '2018-10-11',
                  '2019-05-11', '2019-06-11', '2019-07-11', '2019-08-11', '2019-09-11', '2019-10-11',
@@ -587,5 +472,4 @@ if __name__ == "__main__":
     else:
         dates = [args.date_start]
     # 12.04.2025 дописать установку только одного створа для прогноза в basin.bas
-    ecocycle(dates, {args.lead_type: int(args.lead)}, ens_params)
-
+    # ecocycle(dates, {args.lead_type: int(args.lead)}, ens_params)
