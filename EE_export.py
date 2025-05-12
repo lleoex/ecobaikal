@@ -88,9 +88,15 @@ def getGFS(date):
     for d in dr: # Проходим по датам периода
         print(d)
         for i in range(len(day_list)): # далее по порядковым номерам (индексам) сроков прогноза
-            gfs = ee.ImageCollection(collection).select(bandTemp).filterDate(str(d)[0:10]).filterBounds(geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).mean()
+
             # Выбираем из коллекции нужную заблаговременность, в случае с температурой осредняем, получаем прогноз средней температуры за сутки
-            geemap.ee_export_image(gfs, path + '/' + str(d)[0:10] + '+' + str(i) + '.tif', region = geom) # Экспортируем растр прогноза в текущий день и на данный срок
+            tifname = path + '/' + str(d)[0:10] + '+' + str(i) + '.tif'
+            if os.path.exists(tifname):
+                print(f'{tifname} already exixsts. nothing to download')
+            else:
+                gfs = ee.ImageCollection(collection).select(bandTemp).filterDate(str(d)[0:10]).filterBounds(
+                    geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).mean()
+                geemap.ee_export_image(gfs, path + '/' + str(d)[0:10] + '+' + str(i) + '.tif', region = geom) # Экспортируем растр прогноза в текущий день и на данный срок
 
     bandPrec = 'total_precipitation_surface' # Осадки в кг/кв.м, что в случае с водой соответствует мм
     path = os.path.join(sets.GFS_TIFF_DIR,'prec')#'d:/Data/GFS/prec'
@@ -98,9 +104,13 @@ def getGFS(date):
         os.makedirs(path)
     for d in dr:
         for i in range(len(day_list)):
-            gfs = ee.ImageCollection(collection).select(bandPrec).filterDate(str(d)[0:10]).filterBounds(geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).sum()
-            # в случае с осадками суммируем
-            geemap.ee_export_image(gfs, path + '/' + str(d)[0:10] + '+' + str(i) + '.tif', region = geom)
+            tifname = path + '/' + str(d)[0:10] + '+' + str(i) + '.tif'
+            if os.path.exists(tifname):
+                print(f'{tifname} already exixsts. nothing to download')
+            else:
+                gfs = ee.ImageCollection(collection).select(bandPrec).filterDate(str(d)[0:10]).filterBounds(geom).filter(ee.Filter.inList('forecast_hours', day_list[i])).sum()
+                geemap.ee_export_image(gfs, path + '/' + str(d)[0:10] + '+' + str(i) + '.tif', region=geom)
+
 
 
 if __name__ == "__main__":
