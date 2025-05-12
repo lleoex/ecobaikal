@@ -8,7 +8,7 @@ class Settings:
         self.GFS_TIFF_DIR = os.path.join(self.ROOT_DIR,"Data\\GFS\\")
         self.GFS_BAS_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal\\Data\\Meteo\\")
         self.EMG_HYDRO_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal\\Data\\Hydro\\Baikal\\")
-        self.EMAIL_XLS_DIR = os.path.join(self.ROOT_DIR,"Data\\")
+        self.EMAIL_XLS_DIR = os.path.join(self.ROOT_DIR,"Data\\HYDRO")
         self.SHORT_CT = os.path.join(self.ROOT_DIR,"EcoBaikal\\Archive\\002\\CT\\")
         self.SHORT_RES = os.path.join(self.ROOT_DIR, "EcoBaikal\\Archive\\002\\RES\\")
         self.LONG_CT = os.path.join(self.ROOT_DIR, "EcoBaikal\\Archive\\003\\CT\\")

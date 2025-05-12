@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import csv
+import glob
 from datetime import date, timedelta
 import locale
 locale.setlocale(locale.LC_ALL, 'ru_RU.utf8')
@@ -268,21 +269,26 @@ def readCoef(path):
     df = pd.read_csv(path, sep=';')
     return df
 
-def short_corr(date, res, pathCoeff, pathFactQ):
+def short_corr(date):
     '''
     Коррекция расчетных значений прогнозов по притокам и создание файлов sbrosXX.bas для Байкала
     :param date:
-    :param pathCoeff:
     :param pathFactQ:
     :return:
     '''
-    prog = readShort(res, coef=True)
+    # читаем краткосрочный прогноз с пришиванием коэффициентов коррекции сразу
+    respath = os.path.join(sets.SHORT_RES, (date + timedelta(days=10)).strftime("%Y%m%d"), sets.SOURCE_NAME)
+    prog = readShort(respath, coef=True)
     # print(prog.head())
-    coef = readCoef(pathCoeff)
-    # print(coef.head())
-    df = pd.read_excel(pathFactQ)
     dateMin = prog.date.min()
-    df_corr = pd.merge(prog, df.loc[df['date'] == dateMin], 'left',
+    # читаем фактические расходы по створам
+    factPath = glob.glob(sets.HYDRO_FACT_DIR + '\\' + dateMin.strftime("%Y%m%d") + '*.xlsx')
+    df = pd.read_excel(factPath[0], names=['date', 'post', 'lev', 'q'], nrows=5)
+    trans = {'Верхняя Заимка': 'angara', 'Баргузин': 'barguzin', 'Селенга Мостовой': 'selenga',
+             'Селенга Улан-Удэ': 'uud'}
+    df['post'] = df['post'].replace(trans)
+    df['date'] = df['date'] + pd.DateOffset(days=1)
+    df_corr = pd.merge(prog, df, 'left',
                        left_on=['date', 'river'],
                        right_on=['date', 'post'])
     df_corr.loc[:, 'q'] = df_corr.loc[:, 'q'].ffill()
@@ -296,20 +302,20 @@ def short_corr(date, res, pathCoeff, pathFactQ):
     df_fact = pd.DataFrame()
     riv = {'Anga': 'angara', 'Barg': 'barguzin', 'Sele': 'selenga'}
     for r, name in riv.items():
-        # print(name)
+        print(name)
         path = os.path.join(sets.EMG_HYDRO_DIR,r,'hydr' + str(date.year)[2:4] + '.bas')
         df = pd.read_csv(path, sep='\t+', skiprows=3, names=['n', 'date', 'q'], usecols=['date', 'q'], engine='python')
         df['riv'] = name
         df_fact = pd.concat([df_fact, df], axis=0)
+        # df_fact = pd.merge(df_fact, df, 'left')
         # print(df_fact.head())
     df_fact['date'] = pd.to_datetime(df_fact['date'], format='%Y%m%d')
     df_fact = df_fact.pivot(index='date', columns='riv', values='q')
-    df_fact = df_fact[:date]
+    df_fact = df_fact[:(dateMin - timedelta(days=1))]
     df_fact = pd.concat([df_fact, df_corr], axis=0, ignore_index=False)
-    # df_fact = append_dates(df_fact)
+    df_fact = append_dates(df_fact)
     for column in df_fact:
         # print(column)
-        #path = 'c:/EcoBaikal/Data/Hydro/Baikal/' + str([k for k, v in riv.items() if v == column][0])
         path = sets.EMG_HYDRO_DIR + str([k for k, v in riv.items() if v == column][0])
         # print(path)
         writeHydr(df_fact[column], path, sbros=True, name=column)
@@ -343,7 +349,7 @@ def makeHydr(path):
         #out = df.loc[df['post'] == trans[r]].reset_index().drop(['index', 'lev', 'post'], axis=1)
         out = df.loc[df['post'] == trans[r]].reset_index().drop(['lev', 'post'], axis=1)
         for index, row in out.iterrows():
-            hydr_df.loc[hydr_df['date'] == row['date'],'q'] = row['q']
+            hydr_df.loc[hydr_df['date'] == row['date'], 'q'] = row['q']
         writeHydr(hydr_df, os.path.join(sets.EMG_HYDRO_DIR, r), name=name)
         #writeHydr(out, os.path.join(sets.EMG_HYDRO_DIR,r), name=name, sbros=True)
 
@@ -482,9 +488,8 @@ def long_corr(df, type):
     df.loc[df['scenario'].isnull(), 'scenario'] = 'Qmean'
     df = df.pivot(index='date', columns='scenario', values='qcor')
     df['Qmean'] = df.mean(axis=1)
-
     # df.plot(kind='line')
-    #plt.show()
+    # plt.show()
     # print(df.head())
     return(df)
 
@@ -608,10 +613,10 @@ def ens_stat(path):
 
 # главный модуль
 if __name__ == "__main__":
-    # date = datetime.date(2022, 4, 14) + datetime.timedelta(days=10)
+    date = datetime.date(2025, 5, 10) + datetime.timedelta(days=10)
     # pathCoeff = 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas'
     # pathFactQ = 'd:/Data/Hydro/buryat_q_2022.xlsx'
     # makeHydr('d:/Data/Hydro/buryat_q_2022.xlsx')
-    # short_corr(date, 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas', pathCoeff, pathFactQ)
+    short_corr(date)
     # readQFact('d:/YandexDisk/ИВПРАН/En+/отчет2025_2/1_шаблон_расчетный_среднесуточный.xlsx')
-    ens_stat(r'd:\EcoBaikal\Archive\003\ENS\20250701\20250701_ens.txt')
+    # ens_stat(r'd:\EcoBaikal\Archive\003\ENS\20250701\20250701_ens.txt')

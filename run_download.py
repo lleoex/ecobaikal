@@ -18,6 +18,7 @@ sets = Settings()
 def getQEnPlusApi(dt:datetime):
     receivemail()
     files = [f for f in listdir(sets.EMAIL_XLS_DIR) if (os.path.isfile(os.path.join(sets.EMAIL_XLS_DIR, f)) and dt.strftime('%Y%m%d') in f)]
+    print(files)
     oper_tools.makeHydr(os.path.join(sets.EMAIL_XLS_DIR,files[0]))
 
 
