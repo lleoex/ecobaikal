@@ -127,9 +127,9 @@ def ecocycle(dates, lead, params):
             # расчет КТ при ее отсутствии
             print('Отсутствует контрольная точка. Выполняется расчет')
             if not os.path.isfile(params['dir_CT'] + '\\' +
-                                  datetime.date(model_end.year, 4, 1).strftime("%Y%m%d") +
+                                  datetime.date(model_end.year, 5, 1).strftime("%Y%m%d") +
                                   '\\INPCURV.BAS'):
-                model_start = datetime.date(2022, 1, 1)
+                model_start = datetime.date(2025, 1, 1)
             else:
                 model_start = datetime.date(model_end.year, 1, 1)
 
@@ -167,19 +167,19 @@ def ecocycle(dates, lead, params):
                    pathFactQ=os.path.join(sets.HYDRO_FACT_DIR, 'buryat_q_' + str(date.year) + '.xlsx')
                    )
         # запуск прогноза с заливкой sbrosXX.bas
-        # меняем значения в sbros.bas в зависимости от варианта расчета: "0" если прогноз створам, "4" если в Байкал
-        with open(params['baspath'] + '\sbros.bas', 'w') as sbros:
-            sbros.truncate()
-            sbros.write(' 4 \n 1 2 3')
-            sbros.close()
+        # меняем значения в inflow.bas в зависимости от варианта расчета: "0" если прогноз створам, "4" если в Байкал
+        with open(params['baspath'] + '\inflow.bas', 'w') as inflow:
+            inflow.truncate()
+            inflow.write(' 3 \n 1 2 3')
+            inflow.close()
 
         # второй расчет прогноза с коррекцией
         ecorun(model_start, model_end, **params)
-        # выключаем сбросы в sbros.bas
-        with open(params['baspath'] + '\sbros.bas', 'w') as sbros:
-            sbros.truncate()
-            sbros.write(' 0 \n 1 2 3')
-            sbros.close()
+        # выключаем сбросы в inflow.bas
+        with open(params['baspath'] + '\inflow.bas', 'w') as inflow:
+            inflow.truncate()
+            inflow.write(' 0 \n 1 2 3')
+            inflow.close()
         params['meteo_path'] = old_meteo
 
         # graphShort(params['dir_out'] + '/' + model_end.strftime("%Y%m%d") + '/' + params['source_name'])

@@ -475,7 +475,7 @@ def long_corr(df, type):
     df = df.pivot(index='date', columns='scenario', values='qcor')
     df['Qmean'] = df.mean(axis=1)
     # df.plot(kind='line')
-    print(df.head())
+    # print(df.head())
     return(df)
 
 

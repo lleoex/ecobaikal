@@ -38,9 +38,9 @@ if __name__ == '__main__':
     fname = os.path.join(sets.SHORT_RES, f'{(today + datetime.timedelta(days=10)).strftime("%Y%m%d")}/x+10.xlsx')
     files_to_send.append(fname)
 
-    #sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', [fname])
+    # sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', [fname])
 
-    if today.day == 1:
+    if today.day == 1 or today.day == 10:
 
         # долгосрочный прогноз
         params = read_params(os.path.join(sets.ROOT_DIR, sets.MODEL_DIR, 'baikal_x+60.txt'))
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         # добавление файла для отправки
         lfname = sets.LONG_RES + '/' + str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '/' + \
               'graph_' + (today + datetime.timedelta(days=10)).strftime('%Y-%m-%d') + '.png'
-        files_to_send.append(lfname)
+        files_to_send.append(lfname)s
 
     # отправка почты
-    # sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', files_to_send)
+    	sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', files_to_send)
