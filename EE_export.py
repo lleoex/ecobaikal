@@ -8,13 +8,13 @@ from settings import Settings
 import os
 from oper_tools import check_meteo
 #  авторизация в GEE
-#ee.Authenticate()
-#ee.Initialize(project = 'iwp-dev-383806')
+ee.Authenticate()
+ee.Initialize(project = 'iwp-dev-383806')
 
-service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
-credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
-ee.Initialize(credentials)#,project = 'iwp-sac-baikal')
-#ee.Initialize(project = 'iwp-dev-383806')
+# service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
+# credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
+# ee.Initialize(credentials)#,project = 'iwp-sac-baikal')
+# ee.Initialize(project = 'iwp-dev-383806')
 
 #service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
 #credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
@@ -43,8 +43,8 @@ def setGeom():
 
 def getEra(date):
     # границы по времени
-    #dateStart = '2025-01-01' # если нужно с какой-то определенной даты загрузить
-    dateStart = date - timedelta(days=18) # если нужно загрузить за последние 10 дней
+    dateStart = '2025-01-01' # если нужно с какой-то определенной даты загрузить
+    # dateStart = date - timedelta(days=18) # если нужно загрузить за последние 10 дней
     dateEnd = date - timedelta(days=7)
     print('Запрашиваем данные ERA5Land за ', dateStart, dateEnd)
     # границы по пространству

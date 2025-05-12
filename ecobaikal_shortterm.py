@@ -167,16 +167,16 @@ def ecocycle(dates, lead, params):
                    pathFactQ=os.path.join(sets.HYDRO_FACT_DIR, 'buryat_q_' + str(date.year) + '.xlsx')
                    )
         # запуск прогноза с заливкой sbrosXX.bas
-        # меняем значения в sbros.bas в зависимости от варианта расчета: "0" если прогноз створам, "4" если в Байкал
-        with open(params['baspath'] + '\sbros.bas', 'w') as sbros:
+        # меняем значения в inflow.bas в зависимости от варианта расчета: "0" если прогноз створам, "4" если в Байкал
+        with open(params['baspath'] + '\inflow.bas', 'w') as sbros:
             sbros.truncate()
             sbros.write(' 4 \n 1 2 3')
             sbros.close()
 
         # второй расчет прогноза с коррекцией
         ecorun(model_start, model_end, **params)
-        # выключаем сбросы в sbros.bas
-        with open(params['baspath'] + '\sbros.bas', 'w') as sbros:
+        # выключаем сбросы в inflow.bas
+        with open(params['baspath'] + '\inflow.bas', 'w') as sbros:
             sbros.truncate()
             sbros.write(' 0 \n 1 2 3')
             sbros.close()

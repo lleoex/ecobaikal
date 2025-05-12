@@ -432,44 +432,45 @@ def datelist(date_start, date_end, freq_type, freq):
 
 # главный модуль
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description='Запуск ансамблевого расчета по модели ECOMAG')
-    parser.add_argument('--date_start', type=str, nargs='?', help='Дата начала расчета гггг-мм-дд', required=True)
-    parser.add_argument('--date_end', type=str, nargs='?', help='Дата окончания расчета гггг-мм-дд')
-    parser.add_argument('--single', action='store_true', help='Одиночный ансамблевый прогноз')
-    parser.add_argument('--freq_type', type=str, help='Частота прогноза - суточный days, месячный months',
-                        default='months')
-    parser.add_argument('--freq', type=str, nargs='?', help='Частота прогноза - число (При days: 1 - ежедневный, '
-                                                            '10 - ежедекадный, при months: 1 - ежемесячный',
-                        default='1')
-    parser.add_argument('--lead_type', type=str, default='months', nargs='?',
-                        help='Шаг заблаговременности: days или months')
-    parser.add_argument('--lead', type=int, default=1, choices=range(1, 13), nargs='?',
-                        help='Величина заблаговременности')
-    parser.add_argument('--params', type=str, nargs='?', required=True,
-                        help='Полный путь до файла с параметрами расчета')
-    parser.add_argument('--log', type=str, default='ecorun.log', help='Файл для записи лога ошибок выполнения скрипта')
-    args = parser.parse_args()
-
-    ens_params = read_params(args.params)
-
-    # app_log = logging.getLogger('root')
-    # log_handler = RotatingFileHandler(filename=args.log, mode='a', maxBytes=100*1024,
-    #                                   backupCount=2, encoding=None, delay=0)
-    # app_log.setLevel(logging.ERROR)
-    # app_log.addHandler(log_handler)
-
-    if args.single == False:
-        # dates = datelist(args.date_start, args.date_end, args.freq_type, args.freq)
-        # костыль для проверки бесшовности
-        dates = ['2017-05-11', '2017-06-11', '2017-07-11', '2017-08-11', '2017-09-11', '2017-10-11',
-                 '2018-05-11', '2018-06-11', '2018-07-11', '2018-08-11', '2018-09-11', '2018-10-11',
-                 '2019-05-11', '2019-06-11', '2019-07-11', '2019-08-11', '2019-09-11', '2019-10-11',
-                 '2020-05-11', '2020-06-11', '2020-07-11', '2020-08-11', '2020-09-11', '2020-10-11',
-                 '2021-05-11', '2021-06-11', '2021-07-11', '2021-08-11', '2021-09-11', '2021-10-11',
-                 '2022-05-11', '2022-06-11', '2022-07-11', '2022-08-11', '2022-09-11', '2022-10-11',
-                 '2023-05-11', '2023-06-11', '2023-07-11', '2023-08-11', '2023-09-11', '2023-10-11']
-    else:
-        dates = [args.date_start]
+    #
+    # parser = argparse.ArgumentParser(description='Запуск ансамблевого расчета по модели ECOMAG')
+    # parser.add_argument('--date_start', type=str, nargs='?', help='Дата начала расчета гггг-мм-дд', required=True)
+    # parser.add_argument('--date_end', type=str, nargs='?', help='Дата окончания расчета гггг-мм-дд')
+    # parser.add_argument('--single', action='store_true', help='Одиночный ансамблевый прогноз')
+    # parser.add_argument('--freq_type', type=str, help='Частота прогноза - суточный days, месячный months',
+    #                     default='months')
+    # parser.add_argument('--freq', type=str, nargs='?', help='Частота прогноза - число (При days: 1 - ежедневный, '
+    #                                                         '10 - ежедекадный, при months: 1 - ежемесячный',
+    #                     default='1')
+    # parser.add_argument('--lead_type', type=str, default='months', nargs='?',
+    #                     help='Шаг заблаговременности: days или months')
+    # parser.add_argument('--lead', type=int, default=1, choices=range(1, 13), nargs='?',
+    #                     help='Величина заблаговременности')
+    # parser.add_argument('--params', type=str, nargs='?', required=True,
+    #                     help='Полный путь до файла с параметрами расчета')
+    # parser.add_argument('--log', type=str, default='ecorun.log', help='Файл для записи лога ошибок выполнения скрипта')
+    # args = parser.parse_args()
+    #
+    # ens_params = read_params(args.params)
+    #
+    # # app_log = logging.getLogger('root')
+    # # log_handler = RotatingFileHandler(filename=args.log, mode='a', maxBytes=100*1024,
+    # #                                   backupCount=2, encoding=None, delay=0)
+    # # app_log.setLevel(logging.ERROR)
+    # # app_log.addHandler(log_handler)
+    #
+    # if args.single == False:
+    #     # dates = datelist(args.date_start, args.date_end, args.freq_type, args.freq)
+    #     # костыль для проверки бесшовности
+    #     dates = ['2017-05-11', '2017-06-11', '2017-07-11', '2017-08-11', '2017-09-11', '2017-10-11',
+    #              '2018-05-11', '2018-06-11', '2018-07-11', '2018-08-11', '2018-09-11', '2018-10-11',
+    #              '2019-05-11', '2019-06-11', '2019-07-11', '2019-08-11', '2019-09-11', '2019-10-11',
+    #              '2020-05-11', '2020-06-11', '2020-07-11', '2020-08-11', '2020-09-11', '2020-10-11',
+    #              '2021-05-11', '2021-06-11', '2021-07-11', '2021-08-11', '2021-09-11', '2021-10-11',
+    #              '2022-05-11', '2022-06-11', '2022-07-11', '2022-08-11', '2022-09-11', '2022-10-11',
+    #              '2023-05-11', '2023-06-11', '2023-07-11', '2023-08-11', '2023-09-11', '2023-10-11']
+    # else:
+    #     dates = [args.date_start]
     # 12.04.2025 дописать установку только одного створа для прогноза в basin.bas
     # ecocycle(dates, {args.lead_type: int(args.lead)}, ens_params)
+    ecocycle([datetime.date(2025, 5, 10)], 2, read_params(r'd:\EcoBaikal\model\baikal_x+60.txt'))
