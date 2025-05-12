@@ -229,8 +229,8 @@ def check_hydro(path, date_start):
     hyd_file = path + '\\hydr' + str(date_start.year)[2:4] + '.bas'
     # читаем из файла список станций
     if os.path.exists(hyd_file):
-        df = pd.read_csv(hyd_file, header=None, skiprows=3, delimiter=r"\s+|\t+", parse_dates=[1], date_format ='%Y%m%d',dayfirst=True, index_col=[1],
-                     na_values=-99.0, engine='python')
+        df = pd.read_csv(hyd_file, header=None, skiprows=3, delimiter=r"\s+|\t+", parse_dates=[1],
+                         date_format ='%Y%m%d',dayfirst=True, index_col=[1], na_values=-99.0, engine='python')
 
 
     # print(df.head())
@@ -462,9 +462,17 @@ def long_corr(df, type):
     df['arg'] = (len(df) - df.reset_index().index.values) / len(df)
     df['date'] = df.index
     df = df.melt(id_vars=['date', 'arg'], var_name='scenario', value_name='q')
-    path = os.path.join(sets.SHORT_RES, df['date'].min().strftime('%Y%m%d'),
-                        sets.SOURCE_NAME)
-    ct = readShort(path)
+    if type == '1':
+        path = os.path.join(sets.SHORT_RES, df['date'].min().strftime('%Y%m%d'),
+                            sets.SOURCE_NAME)
+        ct = readShort(path)
+    elif type == '2':
+        path = os.path.join(sets.LONG_CT, df['date'].min().strftime('%Y%m%d'),
+                            sets.SOURCE_NAME)
+        ct = pd.read_csv(path,
+                     sep='\s+', names=['date', 'angara', 'barguzin', 'selenga', 'baikal'],
+                     usecols=[0, 2, 3, 4, 5], skiprows=1,
+                     parse_dates=['date'], date_format='%Y%m%d')
     df = df.merge(ct[['date', 'baikal']], on='date', how='outer')
     df['qcor'] = df['q'].case_when(caselist=[
         (df['date'] <= ct['date'].max(), df['baikal']),
@@ -474,7 +482,9 @@ def long_corr(df, type):
     df.loc[df['scenario'].isnull(), 'scenario'] = 'Qmean'
     df = df.pivot(index='date', columns='scenario', values='qcor')
     df['Qmean'] = df.mean(axis=1)
+
     # df.plot(kind='line')
+    #plt.show()
     # print(df.head())
     return(df)
 
@@ -604,4 +614,4 @@ if __name__ == "__main__":
     # makeHydr('d:/Data/Hydro/buryat_q_2022.xlsx')
     # short_corr(date, 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas', pathCoeff, pathFactQ)
     # readQFact('d:/YandexDisk/ИВПРАН/En+/отчет2025_2/1_шаблон_расчетный_среднесуточный.xlsx')
-    ens_stat(r'd:\EcoBaikal\Archive\003\ENS\20250601\20250601_ens.txt')
+    ens_stat(r'd:\EcoBaikal\Archive\003\ENS\20250701\20250701_ens.txt')

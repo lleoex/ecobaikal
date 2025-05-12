@@ -173,6 +173,7 @@ def ecocycle(dates, lead, params):
             inflow.write(' 3 \n 1 2 3')
             inflow.close()
 
+
         # второй расчет прогноза с коррекцией
         ecorun(model_start, model_end, **params)
         # выключаем сбросы в inflow.bas
@@ -180,6 +181,7 @@ def ecocycle(dates, lead, params):
             inflow.truncate()
             inflow.write(' 0 \n 1 2 3')
             inflow.close()
+
         params['meteo_path'] = old_meteo
 
         # graphShort(params['dir_out'] + '/' + model_end.strftime("%Y%m%d") + '/' + params['source_name'])
