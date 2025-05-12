@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
         # добавление файла для отправки
         lfname = sets.LONG_RES + '/' + str(datetime.date(today.year, today.month + 2, 1).strftime('%Y%m%d')) + '/' + \
-                 'graph_' + (today + datetime.timedelta(days=10)).strftime('%Y-%m-%d') + '.png'
+                 'graph_' + today.strftime('%Y-%m-%d') + '.png'
         files_to_send.append(lfname)
 
         # отправка почты
