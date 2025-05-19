@@ -13,7 +13,7 @@ from oper_tools import check_meteo
 
 service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'
 credentials = ee.ServiceAccountCredentials(service_account, 'iwp-sac-baikal-0f874cc5b815.json')
-# ee.Initialize(credentials)#,project = 'iwp-sac-baikal')
+ee.Initialize(credentials)#,project = 'iwp-sac-baikal')
 # ee.Initialize(project = 'iwp-dev-383806')
 
 #service_account = 'emgbaikalsac@iwp-sac-baikal.iam.gserviceaccount.com'

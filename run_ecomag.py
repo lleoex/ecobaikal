@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     # sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', [fname])
 
-    if today.day == 1 or today.day == 10:
+    if today.day == 1 or today.day == 13:
 
         # долгосрочный прогноз
         params = read_params(os.path.join(sets.ROOT_DIR, sets.MODEL_DIR, 'baikal_x+60.txt'))
@@ -59,4 +59,4 @@ if __name__ == '__main__':
         files_to_send.append(lfname)
 
         # отправка почты
-        sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', files_to_send)
+    sendmail(f'Прогноз от {today.strftime("%Y-%m-%d")}', f'Прогноз от {today.strftime("%Y-%m-%d")}', files_to_send)
