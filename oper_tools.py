@@ -283,6 +283,7 @@ def short_corr(date):
     dateMin = prog.date.min()
     # читаем фактические расходы по створам
     factPath = glob.glob(sets.HYDRO_FACT_DIR + '\\' + dateMin.strftime("%Y%m%d") + '*.xlsx')
+    print(factPath)
     df = pd.read_excel(factPath[0], names=['date', 'post', 'lev', 'q'], nrows=5)
     trans = {'Верхняя Заимка': 'angara', 'Баргузин': 'barguzin', 'Селенга Мостовой': 'selenga',
              'Селенга Улан-Удэ': 'uud'}

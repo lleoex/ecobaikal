@@ -137,27 +137,33 @@ def ecocycle(dates, lead, params):
             params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
             old_dir_out = params['dir_out']
             params['dir_out'] = params['dir_CT']
-            print('ERA5Land', model_start, model_end)
+            print('ERA5Land', model_start, model_end, params['meteo_path'], params['dir_out'])
             ecorun(model_start, model_end, **params)
-            # расчет по GFS_0
-            model_start = model_end
-            model_end = date
-            # КТ по GFS0 для начала расчета
-            params['meteo_path'] = old_meteo + '\\GFS\\'
-            params['dir_out'] = params['dir_CT']
-            print('GFS_0', model_start, model_end)
-            ecorun(model_start, model_end, **params)
-            params['dir_out'] = old_dir_out
-            params['meteo_path'] = old_meteo
+            params['dir_out'] = old_dir_out  # возвращаем директорию для результатов Archive/002/RES
+            params['meteo_path'] = old_meteo  # возвращаем общий путь, откуда берем метео
 
-        # сам расчет
-        print(r'Старт прогноза')
+        # расчет по GFS_0
+        model_start = model_end
+        model_end = date
+        # КТ по GFS0 для начала расчета
+        old_meteo = params['meteo_path'] # сохраняем общий путь, откуда берем метео
+        params['meteo_path'] = params['meteo_path'] + '\\GFS\\' # меняем путь, откуда берем метео - из GFS0
+        old_dir_out = params['dir_out'] # сохраняем директорию для результатов Archive/002/RES
+        params['dir_out'] = params['dir_CT'] # меняем директорию вывода на Archive/002/CT
+        print('GFS_0', model_start, model_end, params['meteo_path'], params['dir_out'])
+        ecorun(model_start, model_end, **params) # расчет по GFS0
+        params['dir_out'] = old_dir_out # возвращаем директорию для результатов Archive/002/RES
+        params['meteo_path'] = old_meteo # возвращаем общий путь, откуда берем метео
+
+
+        # сам прогноз
+        # print(r'Старт прогноза')
         # для метеорологических (не ансамблевых) прогнозов меняем папку с метео на нужную, сохраняя старую
         old_meteo = params['meteo_path']
         params['meteo_path'] = params['meteo_path'] + '\\GFS\\' + date.strftime("%Y%m%d") + '\\'
         model_start = date
         model_end = model_start + datetime.timedelta(days=lead)
-        print(model_start, model_end)
+        print(r'Старт прогноза по GFS', model_start, model_end, params['meteo_path'], params['dir_out'])
         # первый расчет прогноза без коррекции
         ecorun(model_start, model_end, **params)
 
