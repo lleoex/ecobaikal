@@ -22,7 +22,7 @@ class Settings:
         self.emails_p = ['gonchukovlv@yandex.ru', 'moreido@mail.ru', 'envision@enplus.ru', 
 			'kalugin-andrei@mail.ru', 'karmazinenkoEI@enplus-generation.ru'		, 
 			'dl@irmeteo.ru', 'voda@irmeteo.ru', 'gidro.81@mail.ru', 
-				'gmo-bcgms@mail.ru'] # production
+				'gmo-bcgms@mail.ru', 'irktovr@yandex.ru'] # production
         if not os.path.isdir(self.ROOT_DIR):
             self.mkdirs()
 
