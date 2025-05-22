@@ -133,22 +133,22 @@ def ecocycle(dates, lead, params):
             else:
                 model_start = datetime.date(model_end.year, 1, 1)
 
-            old_meteo = params['meteo_path']
-            params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
-            old_dir_out = params['dir_out']
-            params['dir_out'] = params['dir_CT']
-            print('ERA5Land', model_start, model_end)
-            ecorun(model_start, model_end, **params)
-            # расчет по GFS_0
-            model_start = model_end
-            model_end = date
-            # КТ по GFS0 для начала расчета
-            params['meteo_path'] = old_meteo + '\\GFS\\'
-            params['dir_out'] = params['dir_CT']
-            print('GFS_0', model_start, model_end)
-            ecorun(model_start, model_end, **params)
-            params['dir_out'] = old_dir_out
-            params['meteo_path'] = old_meteo
+        old_meteo = params['meteo_path']
+        params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
+        old_dir_out = params['dir_out']
+        params['dir_out'] = params['dir_CT']
+        print('ERA5Land', model_start, model_end)
+        ecorun(model_start, model_end, **params)
+        # расчет по GFS_0
+        model_start = model_end
+        model_end = date
+        # КТ по GFS0 для начала расчета
+        params['meteo_path'] = old_meteo + '\\GFS\\'
+        params['dir_out'] = params['dir_CT']
+        print('GFS_0', model_start, model_end)
+        ecorun(model_start, model_end, **params)
+        params['dir_out'] = old_dir_out
+        params['meteo_path'] = old_meteo
 
         # сам расчет
         print(r'Старт прогноза')
