@@ -123,24 +123,28 @@ def ecocycle(dates, lead, params):
         # проверка на наличие КТ для начала расчета
         fn = params['dir_CT'] + '\\' + model_end.strftime("%Y%m%d") + '\\INPCURV.BAS'
         # print(fn)
-        if os.path.isfile(fn) == False:
-            # расчет КТ при ее отсутствии
-            print('Отсутствует контрольная точка. Выполняется расчет')
-            if not os.path.isfile(params['dir_CT'] + '\\' +
-                                  datetime.date(model_end.year, 4, 1).strftime("%Y%m%d") +
-                                  '\\INPCURV.BAS'):
-                model_start = datetime.date(2022, 1, 1)
-            else:
-                model_start = datetime.date(model_end.year, 1, 1)
+        # if os.path.isfile(fn) == False:
+        # расчет КТ при ее отсутствии
+        print('Отсутствует контрольная точка. Выполняется расчет')
+        if not os.path.isfile(params['dir_CT'] + '\\' +
+                              datetime.date(model_end.year, 4, 1).strftime("%Y%m%d") +
+                              '\\INPCURV.BAS'):
+            model_start = datetime.date(model_end.year, 1, 1)
+        elif not os.path.isfile(params['dir_CT'] + '\\' +
+                              datetime.date(model_end.year, 1, 1).strftime("%Y%m%d") +
+                              '\\INPCURV.BAS'):
+            model_start = datetime.date(2022, 1, 1)
+	else:
+	    model_start = datetime.date(model_end.year, 4, 1)
 
-            old_meteo = params['meteo_path']
-            params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
-            old_dir_out = params['dir_out']
-            params['dir_out'] = params['dir_CT']
-            print('ERA5Land', model_start, model_end, params['meteo_path'], params['dir_out'])
-            ecorun(model_start, model_end, **params)
-            params['dir_out'] = old_dir_out  # возвращаем директорию для результатов Archive/002/RES
-            params['meteo_path'] = old_meteo  # возвращаем общий путь, откуда берем метео
+        old_meteo = params['meteo_path']
+        params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
+        old_dir_out = params['dir_out']
+        params['dir_out'] = params['dir_CT']
+        print('ERA5Land', model_start, model_end, params['meteo_path'], params['dir_out'])
+        ecorun(model_start, model_end, **params)
+        params['dir_out'] = old_dir_out  # возвращаем директорию для результатов Archive/002/RES
+        params['meteo_path'] = old_meteo  # возвращаем общий путь, откуда берем метео
 
         # расчет по GFS_0
         model_start = model_end
