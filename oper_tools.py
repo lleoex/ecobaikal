@@ -293,7 +293,7 @@ def short_corr(date):
                        left_on=['date', 'river'],
                        right_on=['date', 'post'])
     df_corr['err'] = df_corr['q'] - df_corr['value']
-    df_corr.loc[:, 'q'] = df_corr.loc[:, 'err'].ffill()
+    df_corr.loc[:, 'err'] = df_corr.loc[:, 'err'].ffill()
     df_corr['qcorr'] = df_corr['value'] + df_corr['err'] * df_corr['b']
     df_corr['date'] = df_corr['date'].dt.date
     df_corr = df_corr.loc[df_corr['river'] != 'baikal', ["date", "river", "q", "value", "err", "qcorr"]]
