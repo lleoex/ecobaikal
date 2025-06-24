@@ -134,8 +134,8 @@ def ecocycle(dates, lead, params):
                               datetime.date(model_end.year, 1, 1).strftime("%Y%m%d") +
                               '\\INPCURV.BAS'):
             model_start = datetime.date(2022, 1, 1)
-	else:
-	    model_start = datetime.date(model_end.year, 4, 1)
+        else:
+            model_start = datetime.date(model_end.year, 4, 1)
 
         old_meteo = params['meteo_path']
         params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
