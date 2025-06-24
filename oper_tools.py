@@ -292,10 +292,11 @@ def short_corr(date):
     df_corr = pd.merge(prog, df, 'left',
                        left_on=['date', 'river'],
                        right_on=['date', 'post'])
-    df_corr.loc[:, 'q'] = df_corr.loc[:, 'q'].ffill()
-    df_corr['qcorr'] = df_corr['value'] + (df_corr['q'] - df_corr['value']) * df_corr['b']
+    df_corr['err'] = df_corr['q'] - df_corr['value']
+    df_corr.loc[:, 'q'] = df_corr.loc[:, 'err'].ffill()
+    df_corr['qcorr'] = df_corr['value'] + df_corr['err'] * df_corr['b']
     df_corr['date'] = df_corr['date'].dt.date
-    df_corr = df_corr.loc[df_corr['river'] != 'baikal', ["date", "river", "value", "qcorr"]]
+    df_corr = df_corr.loc[df_corr['river'] != 'baikal', ["date", "river", "q", "value", "err", "qcorr"]]
     df_corr['date'] = pd.to_datetime(df_corr['date'], format='%Y%m%d')
     df_corr.to_excel(os.path.join(sets.SHORT_RES, (date + timedelta(days=10)).strftime("%Y%m%d")) + '\\' + 'corr_df.xlsx')
     df_corr = df_corr.pivot(index='date', columns='river', values='qcorr')
