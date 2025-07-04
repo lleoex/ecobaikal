@@ -116,7 +116,7 @@ def ecocycle(dates, lead, params):
 
     # цикл по всем пришедшим датам
     for date in dates:
-        if(type(date) == 'str'):
+        if isinstance(date, str):
             date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
         # расчет по ERA5Land
         model_end = date - timedelta(days=8)
@@ -227,11 +227,11 @@ def datelist(date_start, date_end, freq_type, freq):
 if __name__ == "__main__":
     os.chdir(r'd:\EcoBaikal\model')
     params = read_params('baikal_x+10.txt')
-    dates = []
-    for y in range(int(params['year_start']), int(params['year_end']) + 1):
-        dates.append(datelist(str(y) + '-05-01', str(y) + '-10-31', 'D', '1'))
-    dates = [day for days in dates for day in days]
-    print(dates)
-    print(params['year_start'], params['year_end'])
-    ecocycle(dates, 10, params)
-    # ecocycle(['2016-07-22'], 10, params)
+    # dates = []
+    # for y in range(int(params['year_start']), int(params['year_end']) + 1):
+    #     dates.append(datelist(str(y) + '-05-01', str(y) + '-10-31', 'D', '1'))
+    # dates = [day for days in dates for day in days]
+    # print(dates)
+    # print(params['year_start'], params['year_end'])
+    # ecocycle(dates, 10, params)
+    ecocycle(['2025-05-22'], 10, params)

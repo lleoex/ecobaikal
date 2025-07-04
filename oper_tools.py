@@ -621,6 +621,6 @@ if __name__ == "__main__":
     # pathCoeff = 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas'
     # pathFactQ = 'd:/Data/Hydro/buryat_q_2022.xlsx'
     # makeHydr('d:/Data/Hydro/buryat_q_2022.xlsx')
-    short_corr(date)
+    # short_corr(date)
     # readQFact('d:/YandexDisk/ИВПРАН/En+/отчет2025_2/1_шаблон_расчетный_среднесуточный.xlsx')
     # ens_stat(r'd:\EcoBaikal\Archive\003\ENS\20250701\20250701_ens.txt')
