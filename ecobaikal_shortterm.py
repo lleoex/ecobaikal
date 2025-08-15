@@ -68,7 +68,7 @@ def ecorun(date_start, date_end, meteo_path, hydro_path, baspath, exepath, exena
     # читаем из pathen.bas старые настройки и меняем их по очереди
     with open(exepath + '\pathen.bas', 'r+') as pathen:
         lines = []
-         lines = pathen.read().splitlines()
+        lines = pathen.read().splitlines()
         lines[0] = baspath
         lines[1] = baspath[0:-4] + '\\Graf'
         lines[2] = baspath[0:-4] + '\\Result'
@@ -173,7 +173,7 @@ def ecocycle(dates, lead, params):
         # коррекция и запись sbrosXX.bas
         short_corr(date=date)
         # запуск прогноза с заливкой sbrosXX.bas
-        # меняем значения в inflow.bas в зависимости от варианта расчета: "0" если прогноз створам, "4" если в Байкал
+        # меняем значения в inflow.bas в зависимости от варианта расчета: "0" если прогноз по створам, "4" если в Байкал
         with open(params['baspath'] + '\inflow.bas', 'w') as sbros:
             sbros.truncate()
             sbros.write(' 3 \n 1 2 3')
