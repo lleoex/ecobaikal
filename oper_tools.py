@@ -257,7 +257,7 @@ def readShort(path, **kwargs):
                      sep='\s+', names=['date', 'angara', 'barguzin', 'selenga', 'baikal'],
                      usecols=[0, 2, 3, 4, 5], skiprows=1,
                      parse_dates=['date'], date_format='%Y%m%d')
-    df.insert(0, 'lag', range(0, len(df)))
+    df.insert(0, 'lag', range(-8, len(df) - 8))
 
     if kwargs.get('coef') == True:
         df = pd.melt(df, id_vars=['lag', 'date']).reset_index()
@@ -280,9 +280,9 @@ def short_corr(date):
     respath = os.path.join(sets.SHORT_RES, (date + timedelta(days=10)).strftime("%Y%m%d"), sets.SOURCE_NAME)
     prog = readShort(respath, coef=True)
     # print(prog.head())
-    dateMin = prog.date.min()
+    # dateMin = prog.date.min()
     # читаем фактические расходы по створам
-    factPath = glob.glob(sets.HYDRO_FACT_DIR + '\\' + dateMin.strftime("%Y%m%d") + '*.xlsx')
+    factPath = glob.glob(sets.HYDRO_FACT_DIR + '\\' + date.strftime("%Y%m%d") + '*.xlsx')
     print(factPath)
     df = pd.read_excel(factPath[0], names=['date', 'post', 'lev', 'q'], nrows=5)
     trans = {'Верхняя Заимка': 'angara', 'Баргузин': 'barguzin', 'Селенга Мостовой': 'selenga',
@@ -290,7 +290,7 @@ def short_corr(date):
     df['post'] = df['post'].replace(trans)
     df['date'] = df['date'] + pd.DateOffset(days=1)
     df_corr = pd.merge(prog, df, 'left',
-                       left_on=['date', 'river'],
+                       left_on=['date', 'variable'],
                        right_on=['date', 'post'])
     df_corr['err'] = df_corr['q'] - df_corr['value']
     df_corr.loc[:, 'err'] = df_corr.loc[:, 'err'].ffill()
@@ -299,7 +299,7 @@ def short_corr(date):
     df_corr = df_corr.loc[df_corr['river'] != 'baikal', ["date", "river", "q", "value", "err", "qcorr"]]
     df_corr['date'] = pd.to_datetime(df_corr['date'], format='%Y%m%d')
     df_corr.to_excel(os.path.join(sets.SHORT_RES, (date + timedelta(days=10)).strftime("%Y%m%d")) + '\\' + 'corr_df.xlsx')
-    df_corr = df_corr.pivot(index='date', columns='river', values='qcorr')
+    df_corr = df_corr.dropna(subset=['river']).pivot(index='date', columns='river', values='qcorr')
     df_corr.rename({'river': 'riv', 'value': 'qsim', 'qcorr': 'q'}, axis=1, inplace=True)
     
     # берем фактические расходы по створам до даты начала прогноза, соединяем с прогнозами, пишем в sbros.bas
@@ -315,7 +315,7 @@ def short_corr(date):
         # print(df_fact.head())
     df_fact['date'] = pd.to_datetime(df_fact['date'], format='%Y%m%d')
     df_fact = df_fact.pivot(index='date', columns='riv', values='q')
-    df_fact = df_fact[:(dateMin - timedelta(days=1))]
+    df_fact = df_fact[:(date - timedelta(days=1))]
     df_fact = pd.concat([df_fact, df_corr], axis=0, ignore_index=False)
     df_fact = append_dates(df_fact)
     for column in df_fact:
@@ -424,6 +424,8 @@ def graphShort(res):
     prog = readShort(res)
     # таблица
     prog['date'] = prog['date'].dt.date
+    # хардкод отсечки x-8
+    prog = prog[8:].reset_index(drop=True)
     prog.drop('lag', axis=1).to_excel(sets.SHORT_RES + '/' + (prog['date'][0] + timedelta(days=10)).strftime("%Y%m%d") +
                                       '/' + 'x+10.xlsx', index=False)
     # рисунок
@@ -460,40 +462,56 @@ def dec_quantile(df):
     return [q10, q25, q75, q90]
 
 
-def long_corr(df, type):
+def long_corr(df, type, variant):
     '''
 
-    :param df:
-    :param type:
+    :param df: фрейм долгосрочного прогноза без коррекции
+    :param type: тип входной контрольной точки: 1- краткосрочный прогноз, 2 - долгосрочная КТ
+    :param variant: тип коррекции: 1 - распределение ошибки по линейной зависимости от номера дня ансамбля,
+    2 - простое вычитание ошибки из всех сценариев, 3 - без коррекции
     :return:
     '''
-    # df.plot(kind='line')
     df = df.drop('Qmean', axis=1)
     df['arg'] = (len(df) - df.reset_index().index.values) / len(df)
     df['date'] = df.index
     df = df.melt(id_vars=['date', 'arg'], var_name='scenario', value_name='q')
-    if type == '1':
+    if type == 1:
         path = os.path.join(sets.SHORT_RES, df['date'].min().strftime('%Y%m%d'),
                             sets.SOURCE_NAME)
         ct = readShort(path)
-    elif type == '2':
+        # ct = ct[ct['lag'] >= 0]
+    elif type == 2:
         path = os.path.join(sets.LONG_CT, df['date'].min().strftime('%Y%m%d'),
                             sets.SOURCE_NAME)
         ct = pd.read_csv(path,
                      sep='\s+', names=['date', 'angara', 'barguzin', 'selenga', 'baikal'],
                      usecols=[0, 2, 3, 4, 5], skiprows=1,
                      parse_dates=['date'], date_format='%Y%m%d')
-    df = df.merge(ct[['date', 'baikal']], on='date', how='outer')
-    df['qcor'] = df['q'].case_when(caselist=[
-        (df['date'] <= ct['date'].max(), df['baikal']),
-        (df['date'] > ct['date'].max(),
-         df['q'] - df['arg'] * (df['q'] - df['baikal'].loc[df['date'] == ct['date'].max()].values))
-    ])
+    print(df.head())
+    if variant == 1:
+        df = df.merge(ct[['date', 'baikal']], on='date', how='outer')
+        df['qcor'] = df['q'].case_when(caselist=[
+            (df['date'] <= ct['date'].max(), df['baikal']),
+            (df['date'] > ct['date'].max(),
+             df['q'] - df['arg'] * (df['q'] - df['baikal'].loc[df['date'] == ct['date'].max()].values))
+        ])
+    elif variant == 2:
+        correction_value = ct.loc[ct['date'].idxmax(), 'baikal'] - df.loc[df['date'].idxmin(), 'q']
+        df = df.merge(ct[['date', 'baikal']], on='date', how='outer')
+        df['qcor'] = df['q'].case_when(caselist=[
+            (df['date'] <= ct['date'].max(), df['baikal']),
+            (df['date'] > ct['date'].max(),
+             df['q'] + correction_value)
+        ])
+
+    elif variant == 3:
+        df['qcor'] = df['q']
+        df = df.merge(ct[['date', 'baikal']], on='date', how='outer')
+
     df.loc[df['scenario'].isnull(), 'scenario'] = 'Qmean'
     df = df.pivot(index='date', columns='scenario', values='qcor')
     df['Qmean'] = df.mean(axis=1)
-    # df.plot(kind='line')
-    # plt.show()
+
     # print(df.head())
     return(df)
 
@@ -514,7 +532,10 @@ def ens_stat(path):
     dfw = df * 86400 / 1000000000
 
     # коррекция по краткосрочному прогнозу
-    df = long_corr(df, type='1')
+    df = long_corr(df, type=1, variant=1)
+
+    # df.plot(kind='line', legend=False, ylim = [0, 8000])
+    # plt.show()
 
     month_q = df.drop('Qmean', axis=1).resample('ME').mean().transpose().describe(
         percentiles=[.05, .5, .95]).transpose()
@@ -565,6 +586,7 @@ def ens_stat(path):
     # # axs[0, 0].set_ylabel(r'Объем притока, км$^3$')
     # axs[0, 0].set_ylabel('Inflow volume, km$^3$')
 
+    month_q.dropna(inplace=True)
     month_q.plot(ax=axs[0], y='mean', kind='bar', rot=0, color='tab:blue',
                  yerr=[month_q['mean'] - month_q['5%'], month_q['95%'] - month_q['mean']],
                  error_kw=dict(ecolor='black', lw=2, capsize=5, capthick=2))
@@ -580,7 +602,7 @@ def ens_stat(path):
     # w_tbl.auto_set_font_size(False)
     # w_tbl.set_fontsize(14)
 
-    q_tbl = axs[1].table(cellText=month_q[['mean', '5%', '50%', '95%']].astype(int).values,
+    q_tbl = axs[1].table(cellText=month_q[['mean', '5%', '50%', '95%']].dropna().astype(int).values,
                          colLabels=['Средний\nпрогноз', '95%', 'Медиана', '5%'],
                          rowLabels=month_w.index, loc='center', bbox=[0, 0, 1, 1])
     q_tbl.auto_set_font_size(False)
@@ -591,36 +613,30 @@ def ens_stat(path):
     # plt.show()
 
     # гидрограф
-    # fig = plt.figure(figsize=[16, 10])
-    # ax = fig.add_subplot()
-    # df.drop('Qmean', axis=1).plot(ax=ax, legend=False, grid=True)
-    # df['Qmean'].plot(ax=ax, color = 'red', lw=4)
-    # box = ax.get_position()
+    fig = plt.figure(figsize=[16, 10])
+    ax = fig.add_subplot()
+    df.drop('Qmean', axis=1).plot(ax=ax, legend=False, grid=True)
+    df['Qmean'].plot(ax=ax, color = 'red', lw=4)
+    box = ax.get_position()
     # ax.set_position([box.x0, box.y0 + box.height * 0.1,
     #                  box.width, box.height * 0.9])
     # ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
     #       fancybox=True, shadow=True, ncol=12)
-    #
-    # # линии для пиков
-    # ax.axvline(qmax_date['mean'], linestyle='--', color='blue')
-    # ax.text(qmax_date['mean'], month_q['max'].max(), "Наиболее вероятная дата пика: \n" + qmax_date['mean'].strftime("%d.%m.%Y"),
-    #         rotation=90, verticalalignment='top', ma='right', bbox=dict(facecolor='white', alpha=0.7, lw=0))
-    # ax.axvline(qmax_date['min'], linestyle='--', color='blue')
-    # ax.text(qmax_date['min'], month_q['max'].max(),
-    #         "Ранняя дата пика: \n" + qmax_date['min'].strftime("%d.%m.%Y"),
-    #         rotation=90, verticalalignment='top', ma='right', bbox=dict(facecolor='white', alpha=0.7, lw=0))
-    # ax.axvline(qmax_date['max'], linestyle='--', color='blue')
-    # ax.text(qmax_date['max'], month_q['max'].max(),
-    #         "Поздняя дата пика: \n" + qmax_date['max'].strftime("%d.%m.%Y"),
-    #         rotation=90, verticalalignment='top', ma='right', bbox=dict(facecolor='white', alpha=0.7, lw=0))
+    fig.savefig(os.path.dirname(os.path.abspath(path)) + "//" + 'hydrograph_' + df.index.min().strftime("%Y-%m-%d") + '.png',
+                dpi=100, bbox_inches='tight')
 
 
 # главный модуль
 if __name__ == "__main__":
-    date = datetime.date(2025, 5, 10) + datetime.timedelta(days=10)
+    # date = datetime.date(2025, 5, 10) + datetime.timedelta(days=10)
     # pathCoeff = 'd:/EcoBaikal/Basin/Baik/Bas/X10_corr.bas'
     # pathFactQ = 'd:/Data/Hydro/buryat_q_2022.xlsx'
-    # makeHydr('d:/Data/Hydro/buryat_q_2022.xlsx')
+    # ff = glob.glob('d:/Data/Hydro/*_1.*')
+    # for i in ff:
+    #     print(i)
+    #     makeHydr(i)
     # short_corr(date)
     # readQFact('d:/YandexDisk/ИВПРАН/En+/отчет2025_2/1_шаблон_расчетный_среднесуточный.xlsx')
     # ens_stat(r'd:\EcoBaikal\Archive\003\ENS\20250701\20250701_ens.txt')
+    ens_stat(r'd:\YandexDisk\ИВПРАН\En+\отчет2025_3\01_оперативные результаты\003\ENS\20251101\20251101_ens.txt')
+    # graphShort(r'd:\EcoBaikal\Archive\002\RES\20250918\QCURVBaikal                        .txt')

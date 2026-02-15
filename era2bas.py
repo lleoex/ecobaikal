@@ -230,7 +230,7 @@ if __name__ == "__main__":
     fromDir = 'D:/Data/ERA5Land/'
     toDir = 'D:/EcoBaikal/Data/Meteo/Eraland/'
     var = ['temp', 'prec']
-    workflow(datetime.date(2024, 1, 1), fromDir, toDir, var)
+    workflow(datetime.date(2025, 1, 1), fromDir, toDir, var)
 
     # one specific file
     # df = pd.read_csv(r'd:/EcoMeteo/Era5Land/baikal/total_precipitation/total_precipitation_1997.csv',

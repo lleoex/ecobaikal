@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
+import calendar
+
 import geemap
 import ee
 from datetime import date, timedelta
@@ -21,12 +23,19 @@ from oper_tools import check_meteo
 
 sets = Settings()
 
-def setGeom():
+def setGeom(*coords):
+
     # границы по пространству
-    minLon = 96.5
-    maxLon = 114
-    minLat = 46.5
-    maxLat = 57  # задаём охват нужных данных
+    if not coords:
+        minLon = 96.5
+        maxLon = 114
+        minLat = 46.5
+        maxLat = 57  # задаём охват нужных данных - по умолчанию на Байкал
+    else:
+        minLon = coords[0]
+        maxLon = coords[1]
+        minLat = coords[2]
+        maxLat = coords[3]
     geom = ee.Geometry.Polygon([[[minLon, minLat],
                                  [minLon, maxLat],
                                  [maxLon, maxLat],
@@ -42,14 +51,14 @@ def setGeom():
 
 def getEra(date):
     # границы по времени
-    # dateStart = '2025-01-01' # если нужно с какой-то определенной даты загрузить
+     # dateStart = '2025-01-01' # если нужно с какой-то определенной даты загрузить
     dateStart = date - timedelta(days=18) # если нужно загрузить за последние 10 дней
     dateEnd = date - timedelta(days=7)
     print('Запрашиваем данные ERA5Land за ', dateStart, dateEnd)
     # границы по пространству
     geom = setGeom()
     collection = 'ECMWF/ERA5_LAND/DAILY_AGGR' # Выбираем нужный набор данных
-    period = [dateStart, dateEnd] # задаём начало и конец периода
+    period = [str(dateStart), str(dateEnd)] # задаём начало и конец периода
     bands = {'temp': 'temperature_2m',
              'prec': 'total_precipitation_sum'} # выбираем переменную
     for var, band in bands.items():
@@ -112,5 +121,16 @@ def getGFS(date):
 
 
 
+
 if __name__ == "__main__":
-    getEra('2024-12-31')
+    dates = []
+    for y in range(2025, 2026):
+        for m in range(8, 11):
+            for d in range(1, calendar.monthrange(y, m)[1] + 1):
+                dates.append(date(y, m, d))
+    print(dates)
+    # getGFS(date(2025, 5, 10))
+    for dt in dates:
+    #     # getEra(dt)
+        getGFS(dt)
+

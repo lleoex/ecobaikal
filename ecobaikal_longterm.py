@@ -7,6 +7,7 @@ import subprocess
 import pandas as pd
 import numpy as np
 import argparse
+from dateutil.relativedelta import relativedelta
 from settings import Settings
 sets = Settings()
 
@@ -278,7 +279,7 @@ def ecorun(date_start, date_end, meteo_path, hydro_path, baspath, exepath, exena
     atime = open(baspath + '\\' + 'atime.bas', 'w')
     atime.truncate()
     atime.write(date_start.strftime("%d.%m.%Y") + " " + date_end.strftime("%d.%m.%Y") + '\n')
-    atime.write(str(date_start.timetuple().tm_yday) + " " + str(abs(date_end - date_start).days))
+    atime.write(str(date_start.timetuple().tm_yday) + " " + str(abs(date_end.date() - date_start).days))
     atime.close()
 
     # меняем значения в kpoint.bas в зависимости от варианта расчета: "0" если ансамбль, "2" если диагноз
@@ -341,7 +342,6 @@ def ecocycle(dates, lead, params):
             date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
         # check_meteo(params['meteo_path'], date)
         # проверка на наличие КТ для начала расчета
-        # проверка на наличие КТ для начала расчета
         fn = params['dir_CT'] + '\\' + date.strftime("%Y%m%d") + '\\' + params['source_name']
         # print(fn)
         if os.path.isfile(fn) == False:
@@ -359,7 +359,7 @@ def ecocycle(dates, lead, params):
                         'source_name']):
                 if not os.path.isfile(params['dir_CT'] + '\\' + datetime.date(date.year - 1, date.month, 1).strftime(
                         "%Y%m%d") + '\\' + params['source_name']):
-                    model_start = datetime.date(2025, 1, 1)
+                    model_start = datetime.date(1979, 1, 1)
                 else:
                     model_start = datetime.date(date.year - 1, date.month, 1)
             else:
@@ -387,7 +387,7 @@ def ecocycle(dates, lead, params):
         # model_end = model_start + relativedelta(**lead) # так было
         # if model_start.month < 10:
         # model_end = datetime.date(model_start.year, model_start.month + lead.get('months'), 1)
-        model_end = datetime.date(date.year, date.month + lead, 1)
+        model_end = datetime.date(model_start.year, model_start.month + lead.get('months'), 1)
         # else:
         #     model_end = datetime.date(model_start.year + 1, abs(model_start.month + lead.get('months') - 12), 1)
 
@@ -432,45 +432,37 @@ def datelist(date_start, date_end, freq_type, freq):
 
 # главный модуль
 if __name__ == "__main__":
-    #
-    # parser = argparse.ArgumentParser(description='Запуск ансамблевого расчета по модели ECOMAG')
-    # parser.add_argument('--date_start', type=str, nargs='?', help='Дата начала расчета гггг-мм-дд', required=True)
-    # parser.add_argument('--date_end', type=str, nargs='?', help='Дата окончания расчета гггг-мм-дд')
-    # parser.add_argument('--single', action='store_true', help='Одиночный ансамблевый прогноз')
-    # parser.add_argument('--freq_type', type=str, help='Частота прогноза - суточный days, месячный months',
-    #                     default='months')
-    # parser.add_argument('--freq', type=str, nargs='?', help='Частота прогноза - число (При days: 1 - ежедневный, '
-    #                                                         '10 - ежедекадный, при months: 1 - ежемесячный',
-    #                     default='1')
-    # parser.add_argument('--lead_type', type=str, default='months', nargs='?',
-    #                     help='Шаг заблаговременности: days или months')
-    # parser.add_argument('--lead', type=int, default=1, choices=range(1, 13), nargs='?',
-    #                     help='Величина заблаговременности')
-    # parser.add_argument('--params', type=str, nargs='?', required=True,
-    #                     help='Полный путь до файла с параметрами расчета')
-    # parser.add_argument('--log', type=str, default='ecorun.log', help='Файл для записи лога ошибок выполнения скрипта')
-    # args = parser.parse_args()
-    #
-    # ens_params = read_params(args.params)
-    #
-    # # app_log = logging.getLogger('root')
-    # # log_handler = RotatingFileHandler(filename=args.log, mode='a', maxBytes=100*1024,
-    # #                                   backupCount=2, encoding=None, delay=0)
-    # # app_log.setLevel(logging.ERROR)
-    # # app_log.addHandler(log_handler)
-    #
-    # if args.single == False:
-    #     # dates = datelist(args.date_start, args.date_end, args.freq_type, args.freq)
-    #     # костыль для проверки бесшовности
-    #     dates = ['2017-05-11', '2017-06-11', '2017-07-11', '2017-08-11', '2017-09-11', '2017-10-11',
-    #              '2018-05-11', '2018-06-11', '2018-07-11', '2018-08-11', '2018-09-11', '2018-10-11',
-    #              '2019-05-11', '2019-06-11', '2019-07-11', '2019-08-11', '2019-09-11', '2019-10-11',
-    #              '2020-05-11', '2020-06-11', '2020-07-11', '2020-08-11', '2020-09-11', '2020-10-11',
-    #              '2021-05-11', '2021-06-11', '2021-07-11', '2021-08-11', '2021-09-11', '2021-10-11',
-    #              '2022-05-11', '2022-06-11', '2022-07-11', '2022-08-11', '2022-09-11', '2022-10-11',
-    #              '2023-05-11', '2023-06-11', '2023-07-11', '2023-08-11', '2023-09-11', '2023-10-11']
-    # else:
-    #     dates = [args.date_start]
-    # 12.04.2025 дописать установку только одного створа для прогноза в basin.bas
-    # ecocycle(dates, {args.lead_type: int(args.lead)}, ens_params)
-    ecocycle([datetime.date(2025, 5, 10)], 2, read_params(r'd:\EcoBaikal\model\baikal_x+60.txt'))
+
+    parser = argparse.ArgumentParser(description='Запуск ансамблевого расчета по модели ECOMAG')
+    parser.add_argument('--date_start', type=str, nargs='?', help='Дата начала расчета гггг-мм-дд', required=True)
+    parser.add_argument('--date_end', type=str, nargs='?', help='Дата окончания расчета гггг-мм-дд')
+    parser.add_argument('--single', action='store_true', help='Одиночный ансамблевый прогноз')
+    parser.add_argument('--freq_type', type=str, help='Частота прогноза - суточный days, месячный months',
+                        default='months')
+    parser.add_argument('--freq', type=str, nargs='?', help='Частота прогноза - число (При days: 1 - ежедневный, '
+                                                            '10 - ежедекадный, при months: 1 - ежемесячный',
+                        default='1')
+    parser.add_argument('--lead_type', type=str, default='months', nargs='?',
+                        help='Шаг заблаговременности: days или months')
+    parser.add_argument('--lead', type=int, default=2, choices=range(1, 13), nargs='?',
+                        help='Величина заблаговременности')
+    parser.add_argument('--params', type=str, nargs='?', required=True,
+                        help='Полный путь до файла с параметрами расчета')
+    parser.add_argument('--log', type=str, default='ecorun.log', help='Файл для записи лога ошибок выполнения скрипта')
+    args = parser.parse_args()
+
+    ens_params = read_params(args.params)
+
+    # app_log = logging.getLogger('root')
+    # log_handler = RotatingFileHandler(filename=args.log, mode='a', maxBytes=100*1024,
+    #                                   backupCount=2, encoding=None, delay=0)
+    # app_log.setLevel(logging.ERROR)
+    # app_log.addHandler(log_handler)
+
+    if args.single == False:
+        dates = pd.date_range(start='2020-05-01', end='2025-10-01', freq='MS')
+        dates = dates[dates.month.isin([5, 6, 7, 8, 9, 10])]
+    else:
+        dates = [args.date_start]
+    ecocycle(dates, {args.lead_type: int(args.lead)}, ens_params)
+    # ecocycle([datetime.date(2025, 10, 11)], 2, read_params(r'd:\EcoBaikal\model\baikal_x+60.txt'))

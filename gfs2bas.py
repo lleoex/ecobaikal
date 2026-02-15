@@ -26,9 +26,9 @@ def tif2df(file):
         df.insert(1,'horizon', horizon)
     return df
 
-def tifProc(dir):
+def tifProc(dir, date):
     os.chdir(dir)
-    pattern = str(f'{dir}\*.tif')  # если нужен только один год то поставить 'ХХХХ*.tif'
+    pattern = str(f'{dir}\{date.year}*.tif')  # если нужен только один год то поставить 'ХХХХ*.tif'
     listFiles = glob.glob(pattern, recursive=True)  # Список файлов tif на каждую дату
     print(listFiles)
     df = pd.DataFrame()
@@ -146,7 +146,7 @@ def workflow(wd, outDir, var, date):
     for v in var:
         #os.chdir(wd)
         #print(os.getcwd())
-        df = tifProc(wd + v)
+        df = tifProc(wd + v, date)
         df.index = pd.to_datetime(df['date'])
         # для GFS0
         gfs_0 = df[(df['horizon'] == 0) & (df.index.year == date.year)]
@@ -154,11 +154,14 @@ def workflow(wd, outDir, var, date):
         makeBas(gfs_01, outDir + '/' + 'GFS', v)
         print('Подготовлены данные GFS для ', date)
         # для обычных прогнозов
-        gfs = df[df.index.date == date.date()]
+        gfs = df[df.index.date == date]
         #gfs['date'] = pd.to_datetime(gfs.index.date) + pd.to_timedelta(gfs['horizon'], 'd')
         gfs.index = pd.to_datetime(gfs.index.date) + pd.to_timedelta(gfs['horizon'], 'd')
 
-        gfs1 = gfs.drop(['date', 'horizon'], axis=1)
+        # пришить предыдущие 0-прогнозы и текущий прогноз
+        gfs1 = pd.concat([gfs_0[gfs_0.index.date < date], gfs])
+
+        gfs1 = gfs1.drop(['date', 'horizon'], axis=1)
         makeFcstBas(gfs1, outDir, v, date)
         print('Подготовлены данные GFS для ', date, ' - ', (date + timedelta(days=10)))
 
@@ -174,7 +177,9 @@ def gfsProc(today):
 
 
 if __name__ == "__main__":
-    gfsProc(date(2022, 4, 13))
+    # workflow для одной даты
+    gfsProc(date(2025, 5, 9))
+
     # однократная генерация MeteoStation.bas из tif GFS
     # MSFromTif(r'd:\EcoMeteo\GFS\baikal\t2m_above_ground\2016-10-31+9.tif')
 
