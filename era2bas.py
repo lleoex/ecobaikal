@@ -130,6 +130,7 @@ def genMS(df):
         f.write(contents)
         f.close()
 
+
 def makeBas(df, wd, var):
     '''
 
