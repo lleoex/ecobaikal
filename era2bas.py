@@ -113,7 +113,7 @@ def genMS(df):
     '''
     print('Generating MS file in ' + os.getcwd())
     las = "+proj=laea +lat_0=45 +lon_0=100 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +R=6371200"
-    print('type', type(df))
+    # print('type', type(df))
     df = df.to_crs(las)
     df['H'] = 0
     df['Name'] = df.index

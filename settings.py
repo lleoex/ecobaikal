@@ -5,6 +5,8 @@ class Settings:
         self.ROOT_DIR = "D:\\"
         self.ERA_TIFF_DIR = os.path.join(self.ROOT_DIR,"Data\\ERA5Land\\")
         self.ERA_BAS_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal\\Data\\Meteo\\Eraland\\")
+        self.S2S_NC_DIR = os.path.join(self.ROOT_DIR,"Data\\S2S\\")
+        self.S2S_BAS_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal\\Data\\Meteo\\S2S\\")
         self.GFS_TIFF_DIR = os.path.join(self.ROOT_DIR,"Data\\GFS\\")
         self.GFS_BAS_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal\\Data\\Meteo\\")
         self.EMG_HYDRO_DIR = os.path.join(self.ROOT_DIR,"EcoBaikal\\Data\\Hydro\\Baikal\\")
@@ -36,6 +38,12 @@ class Settings:
 
         if not os.path.isdir(self.ERA_BAS_DIR):
             os.makedirs(self.ERA_BAS_DIR)
+
+        if not os.path.isdir(self.S2S_NC_DIR):
+            os.makedirs(self.S2S_NC_DIR)
+
+        if not os.path.isdir(self.S2S_BAS_DIR):
+            os.makedirs(self.S2S_BAS_DIR)
 
         if not os.path.isdir(self.GFS_TIFF_DIR):
             os.makedirs(self.GFS_TIFF_DIR)
