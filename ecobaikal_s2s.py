@@ -8,6 +8,7 @@ import pandas as pd
 from datetime import timedelta
 from dateutils import relativedelta
 import argparse
+from pathlib import Path
 
 from google.protobuf.internal.well_known_types import Timestamp
 
@@ -102,6 +103,64 @@ def ecorun(date_start, date_end, meteo_path, hydro_path, baspath, exepath, exena
             print(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") + err.decode("utf-8"))
         print(result)
 
+
+class NoFolderFoundError(Exception):
+    """Custom exception raised when no matching folder is found."""
+    pass
+
+
+def find_CT(
+        base_date_str: str,
+        base_path: str = '.',
+        max_days_back: int = 365):
+    """
+    Find the first existing folder by checking dates sequentially backwards.
+    Starts from base_date and goes backwards day by day until finding an existing folder.
+
+    Args:
+        base_date_str: Initial date string in YYYY-MM-DD format
+        base_path: Base directory path to look for folders
+        max_days_back: Maximum number of days to check backwards
+
+    Returns:
+        The date object of the first existing folder found
+
+    Raises:
+        ValueError: If the date string is invalid
+        NoFolderFoundError: If no folder found within max_days_back
+    """
+    # Parse the initial date
+    try:
+        base_date = datetime.datetime.strptime(base_date_str, '%Y-%m-%d').date()
+    except ValueError as e:
+        raise ValueError(f"Неправильный формат даты '{base_date_str}'. Требуется YYYY-MM-DD") from e
+
+    base_dir = Path(base_path)
+
+    # Check if base path exists
+    if not base_dir.exists():
+        raise NoFolderFoundError(f"Нет такой папки: {base_path}")
+
+    # Check dates sequentially backwards
+    for days_back in range(max_days_back + 1):
+        check_date = base_date - timedelta(days=days_back)
+        folder_name = check_date.strftime('%Y%m%d')
+        folder_path = base_dir / folder_name
+
+        if folder_path.exists() and folder_path.is_dir():
+            if days_back == 0:
+                print(f"Контрольная точка на дату выпуска прогноза есть: {folder_name}")
+            else:
+                print(f"Найдена ближайшая контрольная точка к дате выпуска прогноза: {folder_name} ({days_back} дней назад)")
+            return check_date
+
+    # If none found, raise an error
+    raise NoFolderFoundError(
+        f"Не найдено контрольной точки в окрестности {max_days_back} дней до даты выпуска прогноза "
+        f"{base_date.strftime('%Y-%m-%d')} в директории {base_path}"
+    )
+
+
 def ecocycle(dates, lead, params):
     """
 
@@ -131,28 +190,18 @@ def ecocycle(dates, lead, params):
         # расчет по ERA5Land
         model_end = date
         # проверка на наличие КТ для начала расчета
-        fn = params['dir_CT'] + '\\' + model_end.strftime("%Y%m%d") + '\\INPCURV.BAS'
-        # print(fn)
-        # if os.path.isfile(fn) == False:
-        # расчет КТ при ее отсутствии
-        print('Отсутствует контрольная точка. Выполняется расчет')
-        if not os.path.isfile(params['dir_CT'] + '\\' +
-                              datetime.date(model_end.year, 5, 1).strftime("%Y%m%d") +
-                              '\\INPCURV.BAS'):
-            print('Расчет с 1 января текущего года')
-            # model_start = datetime.date(2017, 1, 1)
-            model_start = pd.to_datetime(str(model_end.year) + '-01-01')
-            if not os.path.isfile(params['dir_CT'] + '\\' +
-                                  datetime.date(model_end.year, 1, 1).strftime("%Y%m%d") +
-                                  '\\INPCURV.BAS'):
-                print('Расчет с 1 мая предыдущего года')
-                # model_start = datetime.date(2017, 5, 1)
-                model_start = pd.to_datetime(str(model_end.year - 1) + '-05-01')
-        else:
-            print('c 1981')
-            # model_start = datetime.date(2017, 1, 1)
-            model_start = pd.to_datetime('1981-01-01')
 
+        # новая версия
+        try:
+            model_start = find_CT(model_end.strftime("%Y-%m-%d"), params['dir_CT'], max_days_back=450)
+            print(f"Найдена КТ за дату: {model_start.strftime('%Y%m%d')}")
+
+        except NoFolderFoundError as e:
+            print(f"КТ не найдена: {e}")
+            model_start = pd.to_datetime('1981-01-01')
+            print(f"Старт расчета КТ: {model_start.strftime('%Y%m%d')}")
+
+        # расчет контрольной точки
         old_meteo = params['meteo_path']
         params['meteo_path'] = params['meteo_path'] + '\\Eraland\\'
         old_dir_out = params['dir_out']
@@ -178,7 +227,7 @@ def ecocycle(dates, lead, params):
             model_end = model_start + relativedelta(months=lead)
             print(r'Старт прогноза по S2S', model_start, model_end, params['meteo_path'], params['dir_out'])
             # первый расчет прогноза без коррекции
-            ecorun(model_start, model_end, **params)
+            # ecorun(model_start, model_end, **params)
 
             res = readShort(params['dir_out'] + '\\' + model_end.strftime("%Y%m%d") + '\\' + params['source_name'])
             res.drop(columns='lag', inplace=True)
